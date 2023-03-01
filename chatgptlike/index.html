@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0px 0px 22% 0px;
+            font-family: Söhne,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif,Helvetica Neue,Arial,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
+            background-color: #343541;
+            /* scroll-margin-bottom: 100px; */
+            /* scroll-padding-top: 100px; */
+        }
+        body::-webkit-scrollbar {
+            width: 10px;
+            background-color: #353740;
+        }
+
+        body::-webkit-scrollbar-thumb {
+            background-color: #515361;
+            border-radius: 5%;
+        }
+        body::-webkit-scrollbar-track {
+            background-color: #353740;
+        }
+
+        textarea::-webkit-scrollbar {
+            width: 10px;
+            background-color: #353740;
+        }
+
+        textarea::-webkit-scrollbar-thumb {
+            background-color: rgb(81, 83, 97);
+            border-radius: 5%;
+        }
+        textarea::-webkit-scrollbar-track {
+            background-color: #353740;
+        }
+
+        button.send {
+            width: -moz-fit-content;
+            width: 4%;
+            /* max-width: 9%; */
+            margin-right: 2%;
+            background-color: transparent;
+            border: none;
+            overflow: auto;
+            outline: none;
+            -moz-box-shadow: none;
+            box-shadow: none;
+            padding: 0px;
+            margin: 1% 2% 1% 1%;
+            border-radius: 5px;
+        }
+
+        button.send:hover {
+            background-color: #2c2d30;
+            cursor: pointer;
+        }
+
+        #message {
+            width: 100%;
+            background: #40414f;
+            margin: 2%;
+            resize: none;
+            color: white;
+            border: none;
+            outline: none;
+            box-shadow: none;
+            font-size: 2.4vh;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-hyphens: auto;
+            hyphens: auto;
+            word-wrap: break-word;
+        }
+
+        #form {
+            width: 85vw;
+            display: flex;
+            position: fixed;
+            height: 22%;
+            bottom: 0;
+            padding-left: 15vw;
+            align-items: center;
+            flex-direction: column;
+            flex-wrap: wrap;
+            justify-content: space-evenly;
+            align-content: center;
+            background-image: linear-gradient(180deg,#35374000,#353740 58.85%);
+            padding-right: 15vw;
+        }
+
+        #message-list {
+            /* display: flex; */
+            list-style: none;
+            /* padding-bottom: 22%; */
+            padding-left: 15vw;
+            margin: 0;
+            position: relative;
+            /* max-height: 75vh; */
+            height: 75vh;
+            line-height: 1.7em;
+            /* flex-direction: column; */
+            scroll-padding-bottom: 100px;
+        }
+
+        #message-list li {
+            display: flex;
+            position: relative;
+            background-color: #444654;
+            color: #d1d5db;
+            scroll-margin-bottom: 20002px;
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1);
+            justify-content: center;
+            /* width: max-content; */
+        }
+
+        #message-list li span {
+            max-width: 65vw;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-hyphens:auto;
+            hyphens:auto;
+            word-wrap:break-word;
+        }
+
+        #message-list li#mine {
+            background-color: #343541;
+            color: #ececf1;
+        }
+
+        #test {
+            display: block;
+            position: fixed;
+            width: 15vw;
+            height: 100vh;
+            top: 0px;
+            background-color: #2a2a2a;
+        }
+
+        #clear {
+            display: flex;
+            width: 13vw;
+            height: 7vh;
+            border-radius: 8px;
+            margin-left: 1vw;
+            margin-right: 1vw;
+            margin-top: 2vh;
+            background-color: #2a2a2a;
+            cursor: pointer;
+            color: white;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        #clear:hover {
+            background-color: #444654;
+        }
+
+        #msg {
+            width: 75%;
+        }
+
+        #removeChat {
+            display: none;
+        }
+
+        @media only screen and (max-width: 1026px) {
+            #test {
+                display: none;
+            }
+            #message-list {
+                padding: 0px;
+            }
+            #form {
+                padding: 0px;
+                width: 100vw;
+            }
+            #removeChat  {
+                display: flex;
+                position: fixed;
+                width: 7%;
+                left: 0%;
+                /* bottom: 0%; */
+                /* padding-left: 2%; */
+                margin: 1%;
+                /* padding-bottom: 2%; */
+            }
+            button.send {
+                width: 10%;
+            }
+        }
+
+        #message-holder {
+            background-color: #40414f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 82%;
+            align-content: center;
+        }
+
+        #holder {
+            height: 35%;
+        }
+    </style>
+</head>
+<body>
+        <ul id="message-list">
+            <div id="holder"></div>
+        </ul>
+        <form id="form" method="post">
+            <div id="message-holder">
+                <span id="message" aria-label="message" role="textbox" contenteditable></span>
+                <button class="send" type="submit"><img alt="Send" src="send.svg" width="100%" height="100%"> </button>
+            </div>
+            <div id="removeChat" onclick="removeChilds(msgList);"><img src="trash.svg" width="100%" alt="Clear"></div>
+        
+        </form>
+        <div id="test">
+            <div id="clear" onclick="removeChilds(msgList);"><p>Clear All Message</p></div>
+        </div>
+
+    <script type="text/javascript">
+        const form = document.getElementById('form');
+        const msgList = document.getElementById('message-list');
+        var holder = document.getElementById('holder');
+
+        const decodeUtf8 = (s) => {
+            return decodeURIComponent(escape(s));
+        };
+
+
+        const removeChilds = (parent) => {
+            while (parent.firstChild != holder) {
+                parent.removeChild(parent.firstChild);
+            }
+        };
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            
+            const msg = document.getElementById('message');
+            if (msg.innerText == '')
+            {
+                return;
+            }
+            
+            const data = new FormData();
+            data.set('message', msg.innerText);
+            const newMineLi = document.createElement('li');
+            const newMineP = document.createElement('span');
+            newMineP.innerHTML = data.get('message');
+            holder.remove();
+            newMineLi.id = 'mine';
+            newMineLi.appendChild(newMineP);
+            msgList.appendChild(newMineLi);
+            
+            msg.innerText = '';
+            
+            fetch('/process.php', {
+                method: 'POST',
+                body: data
+            })
+            .then(response => response.text())
+            .then(result => {
+                const newLi = document.createElement('li');
+                const newP = document.createElement('span');
+                const newHolder = document.createElement('div');
+                newHolder.id = 'holder';
+
+                let parts = result.split(/((?:\\x[0-9a-fA-F]{2})*)/g);
+                let newStr = "";
+                parts.forEach(function(part) {
+                    if (part.startsWith("\\x")) {
+                        let hexCodes = part.slice(2);
+                        let hexArr = new Uint8Array(hexCodes.match(/[0-9a-fA-F]{2}/g).map(function(hex) {
+                            return parseInt(hex, 16);
+                        }));
+                        let decodedString = new TextDecoder("utf-8").decode(hexArr);
+                        newStr += decodedString;
+                    } else {
+                        newStr += part;
+                    }
+                });
+
+                newStr = newStr.replace("\\n", `.<br>`);
+
+                newP.innerHTML = newStr;
+                console.log(newP.innerHTML);
+                console.log(newStr);
+                newLi.appendChild(newP);
+                msgList.appendChild(newLi);
+                //newP.innerHTML.replace()
+                holder = msgList.appendChild(newHolder);
+
+            });
+        });
+    </script>
+    
+
+
+</body></html>
