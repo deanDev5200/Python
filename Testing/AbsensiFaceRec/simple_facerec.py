@@ -35,7 +35,7 @@ class SimpleFacerec:
         print("Encoding images loaded")
 
     def detect_known_faces(self, frame):
-        small_frame = cv2.resize(frame, (0, 0), fx=self.frame_resizing, fy=self.frame_resizing)
+        small_frame = cv2.resize(frame, (0, 0), fx=self.frame_resizing, fy=self.frame_resizing) # type: ignore
  # type: ignore
         rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
         face_locations = face_recognition.face_locations(rgb_small_frame)
