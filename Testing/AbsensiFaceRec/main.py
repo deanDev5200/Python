@@ -103,7 +103,7 @@ if isValid:
         elif event == 'Berhenti':
             isStart = False
         elif event == 'Keluar':
-            break
+            break 
         elif event == sg.WIN_CLOSED:
             break
 
