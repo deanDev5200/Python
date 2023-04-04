@@ -1,0 +1,23 @@
+{
+    "intents": [
+    {"tag": "greeting",
+     "patterns": ["hi there", "how are you", "is anyone there?","hey", "hello", "good day"],
+     "responses": ["Hello", "Good to see you again", "Hi there, how can I help?"],
+     "context": [""]
+    },
+    {"tag": "goodbye",
+     "patterns": ["bye", "see you later", "goodbye", "nice chatting to you, bye", "till next time"],
+     "responses": ["See you!", "Have a nice day", "Bye! Come back again soon."],
+     "context": [""]
+    },
+    {"tag": "thanks",
+     "patterns": ["thanks", "thank you", "that's helpful", "awesome, thanks", "thanks for helping me"],
+     "responses": ["My pleasure", "You're Welcome"],
+     "context": [""]
+    },
+    {"tag": "query",
+     "patterns": ["what is big bang?"],
+     "responses": ["The Big Bang theory is the prevailing cosmological model explaining the existence of the observable universe from the earliest known periods through its subsequent large-scale evolution."],
+     "context": [""]
+    }]
+}
