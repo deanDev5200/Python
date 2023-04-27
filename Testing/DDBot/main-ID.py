@@ -2,6 +2,8 @@ import pyautogui
 import speech_recognition as sr
 from gtts import gTTS
 from bs4 import BeautifulSoup
+from nltk.tokenize import word_tokenize
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 import requests
 import webbrowser
 from pydub import AudioSegment
@@ -14,7 +16,68 @@ import serial
 import wikipedia as wiki
 import requests
 import os
+from nltk.tokenize import word_tokenize
+question_words = ["apa", "apakah", "siapa", "bagaimana", "kenapa", "kapan", "dimana", 
+              "mengapa", "pernahkah", 
+             "mana", "bisakah", "maukah", 
+             "haruskah", "punyakah", "berapa", "berapakah"]
+
+
+def stem(text:str):
+    fact = StemmerFactory()
+    stemmer = fact.create_stemmer()
+    return stemmer.stem(text)
+
+def answer_question(question:str):
+    respond = "Saya tidak mengerti"
+    question = question.lower()
+    stemmed = stem(question)
+    print(stemmed)
+    tokenized = word_tokenize(question)
+    if question != "":
+        if any(x in tokenized[0] for x in question_words):
+            if tokenized[0] == question_words[0]:
+                if stemmed.find("adalah cerdas buat") != -1:
+                    respond = "Benar sekali!"
+                elif stemmed.find("kabar") != -1:
+                    respond = f"Aku sangat baik, terimakasih telah bertanya, bagaimana denganmu " + username
+            elif tokenized[0] == question_words[1]:
+                if stemmed.find("adalah cerdas buat") != -1:
+                    respond = "Benar sekali!"
+                elif stemmed.find("kamu cerdas buat") != -1:
+                    respond = "Benar sekali!"
+            elif tokenized[0] == question_words[2]:
+                print(tokenized[1])
+                if tokenized[1] == "namamu":
+                    respond = f"Nama saya adalah " + myname + " versi " + ver + "seenggol dong!"
+                elif tokenized[1] == "kamu":
+                    d = datetime.datetime.now().year
+                    respond = f"Namaku " + myname + " versi " + ver + ". Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya " + str(d-2010) + "Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali"
+                else:
+                    search_term = question.split(tokenized[0])[-1]
+                    f = "Aku tidak menemukan apapun"
+                    try:
+                        f = wiki.summary(search_term, sentences=5)
+                    except wiki.exceptions.PageError:
+                        pass
+                    respond = f
+            elif tokenized[0] == question_words[3]:
+                if stemmed.find("gempa kini") != -1:
+                    respond = earthquake()
+                if tokenized[1] == "cuaca":
+                    weather_data = requests.get(Final_url).json()
+                    temp = weather_data['main']['temp']
+            
+                    wind_speed = weather_data['wind']['speed']
+            
+                    description = weather_data['weather'][0]['description']
+
+                    respond = f"Cuaca: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
+        print(respond)
+        speak(respond)
 bangun = False
+
+
 
 def record_audio(ask='None'):
     with sr.Microphone() as source:
@@ -106,61 +169,14 @@ def respond(voice_data):
             greetings = f"hai, bagaimana aku bisa membantu " + username
 
             speak(greetings)
-
-        elif there_exists(["apa kabarmu", "apa kabar", "Bagaimana kabarmu"]):
-            
-            speak(f"Aku sangat baik, terimakasih telah bertanya, bagaimana denganmu  " + username)
         
         elif there_exists(["saya baik baik saja", "aku baik baik saja", "saya baik-baik saja"]):
             
             speak("Baguslah kalau begitu")
         
-        elif there_exists(["siapa namamu", "namamu siapa"]):
-            
-            speak(f"Nama saya adalah " + myname + " versi " + ver + "seenggol dong!")
-            
         elif there_exists(["bisakah anda membantu saya", "bisakah kamu membantu saya", "bisakah kamu menolong saya", "bisakah anda menolong saya", "bantu saya", "tolong saya"]):
             
             speak(f"Tentu saja aku bisa menolongmu")
-
-        elif there_exists(["ceritakan tentang dirimu", "ceritakan tentang kamu", "siapa anda", "siapa kamu"]):
-            d = datetime.datetime.now().year
-            speak(f"Namaku " + myname + " versi " + ver + ". Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya " + str(d-2010) + "Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali")
-
-
-        elif there_exists(["hentikan musik", "musik berhenti"]):
-            try:
-                port.write(b'!') #type: ignore
-            except:
-                pass
-            speak(f"Menghentikan...")
-
-        elif there_exists(["mainkan musik", "musik"]):
-            req = voice_data.split("music")[-1]
-            speak(f"Memainkan...")
-            time.sleep(0.5) # type: ignore
-            if 'satu' in req:
-                try:
-                    port.write(b'c') #type: ignore
-                except:
-                    pass
-            elif 'dua' in req:
-                try:
-                    port.write(b'w') #type: ignore
-                except:
-                    pass
-            elif 'tiga' in req:
-                try:
-                    port.write(b'q') #type: ignore
-                except:
-                    pass
-            elif 'empat' in req:
-                try:
-                    port.write(b'm') #type: ignore
-                except:
-                    pass
-
-
 
         elif there_exists(["jam berapa sekarang", "katakan jam berapa sekarang", "sekarang jam berapa"]):
             
@@ -172,65 +188,6 @@ def respond(voice_data):
             minutes = time[1]
             time = f"Sekarang jam {hours} {minutes}"
             speak(time)
-            
-        elif there_exists(["bagaimana cuacanya", "bagaimana cuaca sekarang", "bagaimana cuaca hari ini"]):
-            
-            weather_data = requests.get(Final_url).json()
-            temp = weather_data['main']['temp']
-    
-            wind_speed = weather_data['wind']['speed']
-    
-            description = weather_data['weather'][0]['description']
-
-            final_text = f"Cuaca: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
-            
-            print(final_text)
-            speak(final_text)
-            
-        elif there_exists(['apa yang kamu ketahui tentang']):
-            search_term = voice_data.split("apa yang kamu ketahui tentang")[-1]
-            f = "Aku tidak menemukan apapun"
-            try:
-                f = wiki.summary(search_term, sentences=5)
-            except wiki.exceptions.PageError:
-                pass
-            print(f)
-            speak(f)
-            
-        elif there_exists(['bagaimana gempa terkini', 'info gempa terkini']):
-            e = earthquake()
-            print(e)
-            speak(e)
-            
-        elif there_exists(['apa itu']):
-            search_term = voice_data.split("apa itu")[-1]
-            f = "Aku tidak menemukan apapun"
-            try:
-                f = wiki.summary(search_term, sentences=5)
-            except wiki.exceptions.PageError:
-                pass
-            print(f)
-            speak(f)
-            
-        elif there_exists(['apakah kamu tahu']):
-            search_term = voice_data.split("apakah kamu tahu")[-1]
-            f = "Aku tidak menemukan apapun"
-            try:
-                f = wiki.summary(search_term, sentences=5)
-            except wiki.exceptions.PageError:
-                pass
-            print(f)
-            speak(f)
-
-        elif there_exists(['siapa']):
-            search_term = voice_data.split("siapa")[-1]
-            f = "Aku tidak menemukan apapun"
-            try:
-                f = wiki.summary(search_term, sentences=5)
-            except wiki.exceptions.PageError:
-                pass
-            print(f)
-            speak(f)
 
         elif there_exists(['ucapkan']):
             word = voice_data.split("ucapkan")[-1]
@@ -254,7 +211,6 @@ def respond(voice_data):
                 except pyautogui.FailSafeException:
                     pass
 
-
         elif there_exists(["keluar", "selamat tinggal", "matikan sistem", "matikan system", "sampai jumpa"]):
             speak("mematikan sistem...")
             
@@ -263,6 +219,10 @@ def respond(voice_data):
             except:
                 pass
             bangun = False
+
+        else:
+            answer_question(voice_data)
+
     elif there_exists(['robot bangun', 'bangun', 'hai robot bangun', 'hai robot aktifkan']):
         bangun = True
         port.write(b'%') # type: ignore
