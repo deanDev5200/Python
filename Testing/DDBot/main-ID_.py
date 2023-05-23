@@ -1,10 +1,7 @@
-test = False
 import pyautogui
 import speech_recognition as sr
 from gtts import gTTS
 from bs4 import BeautifulSoup
-from nltk.tokenize import word_tokenize
-from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 import requests
 import webbrowser
 from pydub import AudioSegment
@@ -16,7 +13,6 @@ import serial
 import wikipedia as wiki
 import requests
 import os
-from nltk.tokenize import word_tokenize
 question_words = ["apa", "apakah", "siapa", "bagaimana", "kenapa", "kapan", "dimana", 
               "mengapa", "pernahkah", 
              "mana", "bisakah", "maukah", 
@@ -24,95 +20,38 @@ question_words = ["apa", "apakah", "siapa", "bagaimana", "kenapa", "kapan", "dim
 
 def find_wiki(q:str):
     p = "Aku tidak menemukan apapun"
-
     try:
         p = wiki.page(q)
-        m = p.content.split("\n")[0]#.split(".")[0]
-        p = m.split(m.split("(")[1].split(")")[0])
-        p = p[0] + p[1]
-        return p
+        return p.content.split("\n")[0]
     except:
         return p
 
-def stem(text:str):
-    fact = StemmerFactory()
-    stemmer = fact.create_stemmer()
-    return stemmer.stem(text)
-
 def answer_question(question:str):
     respond = "Saya tidak mengerti"
-    question = question.lower()
-    stemmed = stem(question)
-    print(stemmed)
-    tokenized = word_tokenize(question)
-    if question != "":
-        if any(x in tokenized[0] for x in question_words):
-            if tokenized[0] == question_words[0]:
-                if stemmed.find("adalah cerdas buat") != -1:
-                    respond = "Benar sekali!"
-                elif stemmed.find("kabar") != -1:
-                    mon = ctime().split(" ")[1]
-                    day = ctime().split(" ")[2]
-                    if mon == "May" and day == "12":
-                        respond = f"Aku sangat baik terimakasih telah bertanya, Oh ya {username} hari ini ulang tahunmu. Selamat ulang tahun ya"
-                    else:
-                        respond = f"Aku sangat baik terimakasih telah bertanya, bagaimana denganmu {username}"
-                elif stemmed.find("hobi") != -1:
-                    respond = f"Aku hanyalah kecerdasan buatan jadi aku tidak punya hobi"
-            elif tokenized[0] == question_words[1]:
-                if stemmed.find("adalah cerdas buat") != -1:
-                    respond = "Benar sekali!"
-                elif stemmed.find("kamu cerdas buat") != -1:
-                    respond = "Benar sekali!"
-            elif tokenized[0] == question_words[2]:
-                print(tokenized[1])
-                if tokenized[1] == "namamu":
-                    respond = f"Nama saya adalah " + myname + " versi " + ver + "seenggol dong!"
-                elif tokenized[1] == "kamu":
-                    d = datetime.datetime.now().year
-                    respond = f"Namaku " + myname + " versi " + ver + ". Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya " + str(d-2010) + "Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali"
-                else:
-                    search_term = question.split(tokenized[0])[-1]
-                    respond = find_wiki(search_term)
-            elif tokenized[0] == question_words[3]:
-                if stemmed.find("gempa kini") != -1:
-                    respond = earthquake()
-                if tokenized[1] == "cuaca":
-                    weather_data = requests.get(Final_url).json()
-                    temp = weather_data['main']['temp']
-            
-                    wind_speed = weather_data['wind']['speed']
-            
-                    description = weather_data['weather'][0]['description']
 
-                    respond = f"Cuaca: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
-        print(respond)
-        speak(respond)
+    print(respond)
+    speak(respond)
 bangun = False
 
-def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
-    with microphone as source:
-        recognizer.adjust_for_ambient_noise(source)
-        audio = recognizer.listen(source)
 
-    # set up the response object
-    response = {
-        "success": True,
-        "error": None,
-        "transcription": None
-    }
+def record_audio(ask='None'):
+    with sr.Microphone() as source:
+        if ask != 'None':
+            speak(ask)
+        print('Mulai Bicara')
 
-    try:
-        response["transcription"] = recognizer.recognize_google(audio, None, "id-ID")
-    except sr.RequestError:
-        # API was unreachable or unresponsive
-        response["success"] = False
-        response["error"] = "API unavailable"
-    except sr.UnknownValueError:
-        # speech was unintelligible
-        response["error"] = "Unable to recognize speech"
-
-    return response
+        audio = r.listen(source=source, timeout=10, phrase_time_limit=7)
+        print('Mengenali...')
+        voice_data = ''
+        try:
+            voice_data = r.recognize_google(audio_data=audio, language="id-ID")
+        except sr.RequestError:
+            exit()
+        except:
+            pass
+            
+        print(f">> {voice_data.lower()}")  # type: ignore
+        return voice_data.lower()# type: ignore
 
 def speak(audio_string):
 
@@ -136,7 +75,7 @@ def speak(audio_string):
 
 def there_exists(terms):
     for term in terms:
-        if term in res["transcription"].lower():
+        if term in voice_data:
             return True
 
 def earthquake():
@@ -172,7 +111,6 @@ def earthquake():
     return f"Gempa terkini terjadi tanggal {datt['date'][0]} pada {datt['date'][1][0:5]} Waktu Indonesia Barat. Dengan magnitudo {datt['magnitude']} skala richter. Di kedalaman {datt['depth']}. {datt['loc']}"
 
 def respond(voice_data):
-    print(voice_data)
     global bangun
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
@@ -182,7 +120,7 @@ def respond(voice_data):
 
             speak(greetings)
         
-        elif there_exists(["aku baik saja", "aku baik-baik saja", "saya baik-baik saja"]):
+        elif there_exists(["saya baik baik saja", "aku baik baik saja", "saya baik-baik saja"]):
             
             speak("Baguslah kalau begitu")
         
@@ -191,6 +129,7 @@ def respond(voice_data):
             speak(f"Tentu saja aku bisa menolongmu")
 
         elif there_exists(["jam berapa sekarang", "katakan jam berapa sekarang", "sekarang jam berapa"]):
+            
             time = ctime().split(" ")[3].split(":")[0:2]
             if time[0] == "00":
                 hours = '12'
@@ -221,11 +160,6 @@ def respond(voice_data):
                     pyautogui.leftClick()
                 except pyautogui.FailSafeException:
                     pass
-        
-        elif there_exists(["hadiahnya mana", "mana hadiahnya"]):
-            speak(f"baiklah {username}")
-            webbrowser.get().open("https://youtu.be/NCzdcy4lnXk?t=24")
-            speak("Ini hadiahnya")
 
         elif there_exists(["keluar", "selamat tinggal", "matikan sistem", "matikan system", "sampai jumpa"]):
             speak("mematikan sistem...")
@@ -240,7 +174,6 @@ def respond(voice_data):
             answer_question(voice_data)
 
     elif there_exists(['robot bangun', 'bangun', 'hai robot bangun', 'hai robot aktifkan']):
-        print('d')
         bangun = True
         try:
             port.write(b'%') # type: ignore
@@ -279,21 +212,14 @@ try:
 except:
     print("Tidak Bisa Terhubung Ke Badan Robot, Sebaiknya hubungkan untuk pengalaman yang lebih baik")
 
+listener = sr.Recognizer()
+
+
+
+
 r = sr.Recognizer()
-mic = sr.Microphone()
 
 
 while (1):
-    if test == False:
-        res = record_audio(r, mic)
-    else:
-        res = {
-            "success": True,
-            "error": None,
-            "transcription": input("Enter: ")
-        }
-    
-    if res["error"] == None and res["transcription"] != None:
-        respond(res["transcription"])
-    else:
-        print(res["error"])
+    voice_data = record_audio()
+    respond(voice_data)

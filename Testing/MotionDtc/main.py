@@ -2,10 +2,15 @@ import cv2
 import serial
 import time
 
-face_cascade = cv2.CascadeClassifier('MotionDtc/haarcascade_frontalface_default.xml')
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 pix_off = 50
-
-ser = serial.Serial("COM6", 9600)
+serOpen = False
+try:
+    ser = serial.Serial("COM6", 9600)
+    print('connect')
+    serOpen = True
+except:
+    pass
 cap = cv2.VideoCapture(0)
 rettmp, imgtmp = cap.read()
 wh = (imgtmp.shape[0], imgtmp.shape[1])
@@ -18,19 +23,23 @@ while True:
     faces = face_cascade.detectMultiScale(gray, 1.1, 6)
     for (x,y,w,h) in faces:
         cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
+        faceloc = (x+(w/2), y+(h/2))
         cmdtmp = ""
-        if x+(w/2) < center[0]-10:
-            cmdtmp += "+x"
-        if x+(w/2) > center[0]+10:
-            cmdtmp += "-x"
-        if y+(h/2) < center[1]-10:
-            cmdtmp += ":-y"
-        if y+(h/2) > center[1]+10:
-            cmdtmp += ":+y"
-        if cmdtmp != "":
-            print(cmdtmp);
-            ser.write(cmdtmp.encode())
-        time.sleep(1)
+        if faceloc[0] < center[0]-3:
+            cmdtmp += "+"
+        elif faceloc[0] > center[0]+3:
+            cmdtmp += "-"
+        
+        if faceloc[1] < center[1]-3:
+            cmdtmp += "-"
+        elif faceloc[1] > center[1]+3:
+            cmdtmp += "+"
+        if len(cmdtmp) > 0:
+            cmdtmp += "\n"
+            print(cmdtmp)
+            if serOpen:
+                ser.write(cmdtmp.encode()) # type: ignore
+        time.sleep(0.03)
         
 
 
