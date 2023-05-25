@@ -10,6 +10,7 @@ import webbrowser
 from pydub import AudioSegment
 from pydub.playback import play
 import time
+import AppOpener
 import datetime
 from time import ctime
 import serial
@@ -227,6 +228,13 @@ def respond(voice_data):
             webbrowser.get().open("https://youtu.be/NCzdcy4lnXk?t=24")
             speak("Ini hadiahnya")
 
+            
+        elif there_exists(["buka aplikasi"]):
+            app = voice_data.split("Buka aplikasi")[-1].replace(' ', '')
+            speak(f"membuka {app}")
+            AppOpener.open(app, match_closest=True)
+
+
         elif there_exists(["keluar", "selamat tinggal", "matikan sistem", "matikan system", "sampai jumpa"]):
             speak("mematikan sistem...")
             
@@ -240,7 +248,6 @@ def respond(voice_data):
             answer_question(voice_data)
 
     elif there_exists(['robot bangun', 'bangun', 'hai robot bangun', 'hai robot aktifkan']):
-        print('d')
         bangun = True
         try:
             port.write(b'%') # type: ignore
