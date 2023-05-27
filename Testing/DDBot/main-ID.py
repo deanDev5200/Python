@@ -7,6 +7,7 @@ from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 import requests
 import webbrowser
+import json
 from pydub import AudioSegment
 from pydub.playback import play
 import time
@@ -22,13 +23,24 @@ question_words = ["apa", "apakah", "siapa", "bagaimana", "kenapa", "kapan", "dim
               "mengapa", "pernahkah", 
              "mana", "bisakah", "maukah", 
              "haruskah", "punyakah", "berapa", "berapakah"]
+bangun = False
+x = open('const.json').read()
+x = json.loads(x)
+wiki.set_lang('id')
+API_key = x["weather_key"]
+city_id = x["city"]
+username = x["username"]
+myname = x["myname"]
+ver = x["version"]
+r = sr.Recognizer()
+mic = sr.Microphone()
 
 def find_wiki(q:str):
     p = "Aku tidak menemukan apapun"
 
     try:
         p = wiki.page(q)
-        m = p.content.split("\n")[0]#.split(".")[0]
+        m = p.content.split("\n")[0]
         p = m.split(m.split("(")[1].split(")")[0])
         p = p[0] + p[1]
         return p
@@ -89,7 +101,6 @@ def answer_question(question:str):
                     respond = f"Cuaca: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
         print(respond)
         speak(respond)
-bangun = False
 
 def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
     with microphone as source:
@@ -228,12 +239,10 @@ def respond(voice_data):
             webbrowser.get().open("https://youtu.be/NCzdcy4lnXk?t=24")
             speak("Ini hadiahnya")
 
-            
         elif there_exists(["buka aplikasi"]):
             app = voice_data.split("Buka aplikasi")[-1].replace(' ', '')
             speak(f"membuka {app}")
             AppOpener.open(app, match_closest=True)
-
 
         elif there_exists(["keluar", "selamat tinggal", "matikan sistem", "matikan system", "sampai jumpa"]):
             speak("mematikan sistem...")
@@ -256,26 +265,13 @@ def respond(voice_data):
         speak('Selamat Datang ' + username)
 
 
-
-
-wiki.set_lang('id')
 try:
     os.remove('ttstmp.mp3')
 except:
     pass
 
-API_key = "78c067d5244c3b1392a1de0288f15207"
- 
+Final_url = f"http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city_id}&lang=id"
 
-base_url = "http://api.openweathermap.org/data/2.5/weather?"
- 
-
-city_id = "Singaraja"
-
-Final_url = f"{base_url}appid={API_key}&q={city_id}&lang=id"
-username = "teman"
-myname = "D D Bot"
-ver = "2"
 comport = input('Masukkan Nama Port Dari Robot: ')
 port = None
 
@@ -285,10 +281,6 @@ try:
     print("Badan Robot, Terhubung")
 except:
     print("Tidak Bisa Terhubung Ke Badan Robot, Sebaiknya hubungkan untuk pengalaman yang lebih baik")
-
-r = sr.Recognizer()
-mic = sr.Microphone()
-
 
 while (1):
     if test == False:
