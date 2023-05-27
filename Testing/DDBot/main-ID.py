@@ -240,7 +240,7 @@ def respond(voice_data):
             speak("Ini hadiahnya")
 
         elif there_exists(["buka aplikasi"]):
-            app = voice_data.split("Buka aplikasi")[-1].replace(' ', '')
+            app = voice_data.lower().split("buka aplikasi")[-1].replace(' ', '')
             speak(f"membuka {app}")
             AppOpener.open(app, match_closest=True)
 
