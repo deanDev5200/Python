@@ -1,4 +1,5 @@
 test = False
+import random
 import pyautogui
 import speech_recognition as sr
 from gtts import gTTS
@@ -10,7 +11,7 @@ import webbrowser
 import json
 from pydub import AudioSegment
 from pydub.playback import play
-import time
+from time import sleep
 import AppOpener
 import datetime
 from time import ctime
@@ -18,15 +19,29 @@ import serial
 import wikipedia as wiki
 import requests
 import os
+from paho.mqtt import client as mqtt_client
 from nltk.tokenize import word_tokenize
-question_words = ["apa", "apakah", "siapa", "bagaimana", "kenapa", "kapan", "dimana", 
-              "mengapa", "pernahkah", 
-             "mana", "bisakah", "maukah", 
-             "haruskah", "punyakah", "berapa", "berapakah"]
+broker = 'broker.emqx.io'
+mqttport = 1883
+topic = "deanpop/lampujarakjauh/01"
+client_id = f'python-mqtt-{random.randint(0, 1000)}'
+def connect_mqtt():
+    client = mqtt_client.Client(client_id)
+
+    client.connect(broker, mqttport)
+    return client
+
+def publish(client, state:int):
+        if client != None:
+            msg = f"{state}"
+            client.publish(topic, msg)
+
+
 bangun = False
 x = open('const.json').read()
 x = json.loads(x)
 wiki.set_lang('id')
+question_words = x["question_words"]
 API_key = x["weather_key"]
 city_id = x["city"]
 username = x["username"]
@@ -56,7 +71,6 @@ def answer_question(question:str):
     respond = "Saya tidak mengerti"
     question = question.lower()
     stemmed = stem(question)
-    print(stemmed)
     tokenized = word_tokenize(question)
     if question != "":
         if any(x in tokenized[0] for x in question_words):
@@ -72,33 +86,63 @@ def answer_question(question:str):
                         respond = f"Aku sangat baik terimakasih telah bertanya, bagaimana denganmu {username}"
                 elif stemmed.find("hobi") != -1:
                     respond = f"Aku hanyalah kecerdasan buatan jadi aku tidak punya hobi"
+                elif tokenized[1] == "itu" and question.lower().split('apa itu ')[1] == 'bali digifest':
+                    respond = " Bali Digifest sedang membangun kolaborasi dengan para pemangku kepentingan yang menjadi bagian dari perkembangan ekosistem digital Bali, sebagai upaya untuk mempercepat realisasi visi Nangun Sat Kerthi Loka Bali melalui pola pengembangan universal yang direncanakan menuju era baru Bali. Para penyelenggara festival mengakui pentingnya mengadopsi pola pengembangan universal yang mencakup berbagai aspek kehidupan di pulau ini, termasuk budaya, ekonomi, teknologi, dan keberlanjutan.\n  Festival Digital Bali bertujuan untuk mendorong Bali menuju era baru inovasi, inklusivitas, dan pertumbuhan yang berkelanjutan melalui pola pengembangan universal yang direncanakan."
             elif tokenized[0] == question_words[1]:
                 if stemmed.find("adalah cerdas buat") != -1:
                     respond = "Benar sekali!"
                 elif stemmed.find("kamu cerdas buat") != -1:
                     respond = "Benar sekali!"
             elif tokenized[0] == question_words[2]:
-                print(tokenized[1])
                 if tokenized[1] == "namamu":
-                    respond = f"Nama saya adalah " + myname + " versi " + ver + "seenggol dong!"
+                    respond = f"Nama saya adalah {myname} versi {ver} seenggol dong!"
                 elif tokenized[1] == "kamu":
                     d = datetime.datetime.now().year
-                    respond = f"Namaku " + myname + " versi " + ver + ". Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya " + str(d-2010) + "Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali"
+                    respond = f"Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {str(d-2010)} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali"
                 else:
-                    search_term = question.split(tokenized[0])[-1]
+                    search_term = question.split('siapa ')[1]
+                    print(search_term)
                     respond = find_wiki(search_term)
             elif tokenized[0] == question_words[3]:
                 if stemmed.find("gempa kini") != -1:
                     respond = earthquake()
                 if tokenized[1] == "cuaca":
-                    weather_data = requests.get(Final_url).json()
+                    if tokenized[2] != "di":
+                        weather_data = requests.get(f"http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city_id}&lang=id").json()
+                        city = True
+                    else:
+                        try:
+                            city = question.split("bagaimana cuaca di ")[1]
+                        except:
+                            city = city_id
+                        weather_data = requests.get(f"http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city}&lang=id").json()
                     temp = weather_data['main']['temp']
             
                     wind_speed = weather_data['wind']['speed']
             
                     description = weather_data['weather'][0]['description']
-
-                    respond = f"Cuaca: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
+                    if city == True:
+                        respond = f"Cuaca di {city_id}: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
+                    else:
+                        respond = f"Cuaca di {city}: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
+                elif tokenized[1] == "cara":
+                    search = question.split("bagaimana ")[1]
+                    print(search)
+                    try:
+                        webbrowser.get().open("https://id.wikihow.com/Halaman-Utama")
+                        while pyautogui.pixel(983, 127) != (147, 184, 116):
+                            pass
+                        sleep(0.2)
+                        pyautogui.click(783, 133)
+                        pyautogui.write(search, 0.05)
+                        pyautogui.click(912, 136)
+                        while pyautogui.pixel(710, 216) == (243, 243, 243) or pyautogui.pixel(710, 216) == (230, 238, 224):
+                            pass
+                        sleep(0.7)
+                        pyautogui.click(710, 216)
+                        respond = f"Ini dia {search}"
+                    except:
+                        pass
         print(respond)
         speak(respond)
 
@@ -188,11 +232,7 @@ def respond(voice_data):
     global bangun
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
-            
-            
-            greetings = f"hai, bagaimana aku bisa membantu " + username
-
-            speak(greetings)
+            speak('Selamat Datang di Bali Digifest 2023, Buleleng Bisa')
         
         elif there_exists(["aku baik saja", "aku baik-baik saja", "saya baik-baik saja"]):
             
@@ -222,16 +262,23 @@ def respond(voice_data):
                 speak(word)
             
         elif there_exists(["putar lagu"]):
-            search_term = voice_data.split("putar lagu")[-1]
+            search_term = voice_data.lower().split("putar lagu")[-1]
             if search_term != '':
-                url = f"https://www.youtube.com/results?search_query={search_term}"
-                webbrowser.get().open(url)
                 
-                speak(f'Ini adalah apa yang aku dapat untuk {search_term} di youtube, mengklik....')
                 try:
-                    pyautogui.moveTo(650, 350, duration=1)
-                    pyautogui.leftClick()
-                except pyautogui.FailSafeException:
+                    speak(f"baiklah, memutar lagu {search_term}")
+                    AppOpener.open('spotify')
+                    while pyautogui.pixel(119, 115) != (179, 179, 179):
+                        pass
+                    sleep(0.5)
+                    pyautogui.click(87,117)
+                    pyautogui.write(search_term, 0.05)
+                    while pyautogui.pixel(902, 249) == (18, 18, 18):
+                        pass
+                    pyautogui.moveTo(902, 249)
+                    sleep(0.2)
+                    pyautogui.click(902, 249)
+                except:
                     pass
         
         elif there_exists(["hadiahnya mana", "mana hadiahnya"]):
@@ -243,6 +290,17 @@ def respond(voice_data):
             app = voice_data.lower().split("buka aplikasi")[-1].replace(' ', '')
             speak(f"membuka {app}")
             AppOpener.open(app, match_closest=True)
+
+        elif there_exists(["hidupkan lampu"]):
+            speak("menghidupkan lampu")
+            publish(mqttclient, 1)
+
+        elif there_exists(["matikan lampu"]):
+            speak("mematikan lampu")
+            publish(mqttclient, 0)
+
+        elif there_exists(["robot sapa pengunjung"]):
+            speak('Selamat Datang di Bali Digifest 2023, Buleleng Bisa')
 
         elif there_exists(["keluar", "selamat tinggal", "matikan sistem", "matikan system", "sampai jumpa"]):
             speak("mematikan sistem...")
@@ -256,13 +314,13 @@ def respond(voice_data):
         else:
             answer_question(voice_data)
 
-    elif there_exists(['robot bangun', 'bangun', 'hai robot bangun', 'hai robot aktifkan']):
+    elif there_exists(['robot bangun', 'hai robot bangun', 'hai robot aktifkan']):
         bangun = True
         try:
             port.write(b'%') # type: ignore
         except:
             pass
-        speak('Selamat Datang ' + username)
+        speak('Selamat Datang di Bali Digifest 2023, Buleleng Bisa')
 
 
 try:
@@ -270,9 +328,12 @@ try:
 except:
     pass
 
-Final_url = f"http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city_id}&lang=id"
-
 comport = input('Masukkan Nama Port Dari Robot: ')
+try:
+    mqttclient = connect_mqtt()
+    mqttclient.loop_start()
+except:
+    mqttclient = None
 port = None
 
 try:
