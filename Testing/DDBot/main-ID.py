@@ -17,10 +17,9 @@ import datetime
 from time import ctime
 import serial
 import wikipedia as wiki
-import requests
 import os
 from paho.mqtt import client as mqtt_client
-from nltk.tokenize import word_tokenize
+
 broker = 'broker.emqx.io'
 mqttport = 1883
 topic = "deanpop/lampujarakjauh/01"
