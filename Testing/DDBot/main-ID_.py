@@ -1,57 +1,174 @@
+test = True
+import random
 import pyautogui
 import speech_recognition as sr
 from gtts import gTTS
 from bs4 import BeautifulSoup
+from nltk.tokenize import word_tokenize
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 import requests
 import webbrowser
+import json
 from pydub import AudioSegment
 from pydub.playback import play
-import time
+from time import sleep
+import AppOpener
 import datetime
 from time import ctime
 import serial
 import wikipedia as wiki
 import requests
 import os
-question_words = ["apa", "apakah", "siapa", "bagaimana", "kenapa", "kapan", "dimana", 
-              "mengapa", "pernahkah", 
-             "mana", "bisakah", "maukah", 
-             "haruskah", "punyakah", "berapa", "berapakah"]
+from paho.mqtt import client as mqtt_client
+from nltk.tokenize import word_tokenize
+broker = 'broker.emqx.io'
+mqttport = 1883
+topic = "deanpop/lampujarakjauh/01"
+client_id = f'python-mqtt-{random.randint(0, 1000)}'
+def connect_mqtt():
+    client = mqtt_client.Client(client_id)
+
+    client.connect(broker, mqttport)
+    return client
+
+def publish(client, state:int):
+        if client != None:
+            msg = f"{state}"
+            client.publish(topic, msg)
+
+
+bangun = False
+x = open('const.json').read()
+x = json.loads(x)
+wiki.set_lang('id')
+question_words = x["question_words"]
+API_key = x["weather_key"]
+city_id = x["city"]
+username = x["username"]
+myname = x["myname"]
+ver = x["version"]
+r = sr.Recognizer()
+mic = sr.Microphone()
 
 def find_wiki(q:str):
     p = "Aku tidak menemukan apapun"
+
     try:
         p = wiki.page(q)
-        return p.content.split("\n")[0]
+        m = p.content.split("\n")[0]
+        p = m.split(m.split("(")[1].split(")")[0])
+        p = p[0] + p[1]
+        return p
     except:
         return p
 
+def stem(text:str):
+    fact = StemmerFactory()
+    stemmer = fact.create_stemmer()
+    return stemmer.stem(text)
+
 def answer_question(question:str):
     respond = "Saya tidak mengerti"
-
-    print(respond)
-    speak(respond)
-bangun = False
-
-
-def record_audio(ask='None'):
-    with sr.Microphone() as source:
-        if ask != 'None':
-            speak(ask)
-        print('Mulai Bicara')
-
-        audio = r.listen(source=source, timeout=10, phrase_time_limit=7)
-        print('Mengenali...')
-        voice_data = ''
-        try:
-            voice_data = r.recognize_google(audio_data=audio, language="id-ID")
-        except sr.RequestError:
-            exit()
-        except:
-            pass
+    question = question.lower()
+    stemmed = stem(question)
+    tokenized = word_tokenize(question)
+    if question != "":
+        if any(x in tokenized[0] for x in question_words):
+            if tokenized[0] == question_words[0]:
+                if stemmed.find("adalah cerdas buat") != -1:
+                    respond = "Benar sekali!"
+                elif stemmed.find("kabar") != -1:
+                    mon = ctime().split(" ")[1]
+                    day = ctime().split(" ")[2]
+                    if mon == "May" and day == "12":
+                        respond = f"Aku sangat baik terimakasih telah bertanya, Oh ya {username} hari ini ulang tahunmu. Selamat ulang tahun ya"
+                    else:
+                        respond = f"Aku sangat baik terimakasih telah bertanya, bagaimana denganmu {username}"
+                elif stemmed.find("hobi") != -1:
+                    respond = f"Aku hanyalah kecerdasan buatan jadi aku tidak punya hobi"
+                elif tokenized[1] == "itu" and question.lower().split('apa itu ')[1] == 'bali digifest':
+                    respond = " Bali Digifest sedang membangun kolaborasi dengan para pemangku kepentingan yang menjadi bagian dari perkembangan ekosistem digital Bali, sebagai upaya untuk mempercepat realisasi visi Nangun Sat Kerthi Loka Bali melalui pola pengembangan universal yang direncanakan menuju era baru Bali. Para penyelenggara festival mengakui pentingnya mengadopsi pola pengembangan universal yang mencakup berbagai aspek kehidupan di pulau ini, termasuk budaya, ekonomi, teknologi, dan keberlanjutan.\n  Festival Digital Bali bertujuan untuk mendorong Bali menuju era baru inovasi, inklusivitas, dan pertumbuhan yang berkelanjutan melalui pola pengembangan universal yang direncanakan."
+            elif tokenized[0] == question_words[1]:
+                if stemmed.find("adalah cerdas buat") != -1:
+                    respond = "Benar sekali!"
+                elif stemmed.find("kamu cerdas buat") != -1:
+                    respond = "Benar sekali!"
+            elif tokenized[0] == question_words[2]:
+                if tokenized[1] == "namamu":
+                    respond = f"Nama saya adalah {myname} versi {ver} seenggol dong!"
+                elif tokenized[1] == "kamu":
+                    d = datetime.datetime.now().year
+                    respond = f"Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {str(d-2010)} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali"
+                else:
+                    search_term = question.split('siapa ')[1]
+                    print(search_term)
+                    respond = find_wiki(search_term)
+            elif tokenized[0] == question_words[3]:
+                if stemmed.find("gempa kini") != -1:
+                    respond = earthquake()
+                if tokenized[1] == "cuaca":
+                    if tokenized[2] != "di":
+                        weather_data = requests.get(f"http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city_id}&lang=id").json()
+                        city = True
+                    else:
+                        try:
+                            city = question.split("bagaimana cuaca di ")[1]
+                        except:
+                            city = city_id
+                        weather_data = requests.get(f"http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city}&lang=id").json()
+                    temp = weather_data['main']['temp']
             
-        print(f">> {voice_data.lower()}")  # type: ignore
-        return voice_data.lower()# type: ignore
+                    wind_speed = weather_data['wind']['speed']
+            
+                    description = weather_data['weather'][0]['description']
+                    if city == True:
+                        respond = f"Cuaca di {city_id}: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
+                    else:
+                        respond = f"Cuaca di {city}: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
+                elif tokenized[1] == "cara":
+                    search = question.split("bagaimana ")[1]
+                    print(search)
+                    try:
+                        webbrowser.get().open("https://id.wikihow.com/Halaman-Utama")
+                        while pyautogui.pixel(983, 127) != (147, 184, 116):
+                            pass
+                        sleep(0.2)
+                        pyautogui.click(783, 133)
+                        pyautogui.write(search, 0.05)
+                        pyautogui.click(912, 136)
+                        while pyautogui.pixel(710, 216) == (243, 243, 243) or pyautogui.pixel(710, 216) == (230, 238, 224):
+                            pass
+                        sleep(0.7)
+                        pyautogui.click(710, 216)
+                        respond = f"Ini dia {search}"
+                    except:
+                        pass
+        print(respond)
+        speak(respond)
+
+def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
+    with microphone as source:
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
+
+    # set up the response object
+    response = {
+        "success": True,
+        "error": None,
+        "transcription": None
+    }
+
+    try:
+        response["transcription"] = recognizer.recognize_google(audio, None, "id-ID")
+    except sr.RequestError:
+        # API was unreachable or unresponsive
+        response["success"] = False
+        response["error"] = "API unavailable"
+    except sr.UnknownValueError:
+        # speech was unintelligible
+        response["error"] = "Unable to recognize speech"
+
+    return response
 
 def speak(audio_string):
 
@@ -75,7 +192,7 @@ def speak(audio_string):
 
 def there_exists(terms):
     for term in terms:
-        if term in voice_data:
+        if term in res["transcription"].lower():
             return True
 
 def earthquake():
@@ -111,16 +228,13 @@ def earthquake():
     return f"Gempa terkini terjadi tanggal {datt['date'][0]} pada {datt['date'][1][0:5]} Waktu Indonesia Barat. Dengan magnitudo {datt['magnitude']} skala richter. Di kedalaman {datt['depth']}. {datt['loc']}"
 
 def respond(voice_data):
+    print(voice_data)
     global bangun
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
-            
-            
-            greetings = f"hai, bagaimana aku bisa membantu " + username
-
-            speak(greetings)
+            speak('Selamat Datang di Bali Digifest 2023, Buleleng Bisa')
         
-        elif there_exists(["saya baik baik saja", "aku baik baik saja", "saya baik-baik saja"]):
+        elif there_exists(["aku baik saja", "aku baik-baik saja", "saya baik-baik saja"]):
             
             speak("Baguslah kalau begitu")
         
@@ -129,7 +243,6 @@ def respond(voice_data):
             speak(f"Tentu saja aku bisa menolongmu")
 
         elif there_exists(["jam berapa sekarang", "katakan jam berapa sekarang", "sekarang jam berapa"]):
-            
             time = ctime().split(" ")[3].split(":")[0:2]
             if time[0] == "00":
                 hours = '12'
@@ -149,17 +262,45 @@ def respond(voice_data):
                 speak(word)
             
         elif there_exists(["putar lagu"]):
-            search_term = voice_data.split("putar lagu")[-1]
+            search_term = voice_data.lower().split("putar lagu")[-1]
             if search_term != '':
-                url = f"https://www.youtube.com/results?search_query={search_term}"
-                webbrowser.get().open(url)
                 
-                speak(f'Ini adalah apa yang aku dapat untuk {search_term} di youtube, mengklik....')
                 try:
-                    pyautogui.moveTo(650, 350, duration=1)
-                    pyautogui.leftClick()
-                except pyautogui.FailSafeException:
+                    speak(f"baiklah, memutar lagu {search_term}")
+                    AppOpener.open('spotify')
+                    while pyautogui.pixel(119, 115) != (179, 179, 179):
+                        pass
+                    sleep(0.5)
+                    pyautogui.click(87,117)
+                    pyautogui.write(search_term, 0.05)
+                    while pyautogui.pixel(902, 249) == (18, 18, 18):
+                        pass
+                    pyautogui.moveTo(902, 249)
+                    sleep(0.2)
+                    pyautogui.click(902, 249)
+                except:
                     pass
+        
+        elif there_exists(["hadiahnya mana", "mana hadiahnya"]):
+            speak(f"baiklah {username}")
+            webbrowser.get().open("https://youtu.be/NCzdcy4lnXk?t=24")
+            speak("Ini hadiahnya")
+
+        elif there_exists(["buka aplikasi"]):
+            app = voice_data.lower().split("buka aplikasi")[-1].replace(' ', '')
+            speak(f"membuka {app}")
+            AppOpener.open(app, match_closest=True)
+
+        elif there_exists(["hidupkan lampu"]):
+            speak("menghidupkan lampu")
+            publish(mqttclient, 1)
+
+        elif there_exists(["matikan lampu"]):
+            speak("mematikan lampu")
+            publish(mqttclient, 0)
+
+        elif there_exists(["robot sapa pengunjung"]):
+            speak('Selamat Datang di Bali Digifest 2023, Buleleng Bisa')
 
         elif there_exists(["keluar", "selamat tinggal", "matikan sistem", "matikan system", "sampai jumpa"]):
             speak("mematikan sistem...")
@@ -173,36 +314,26 @@ def respond(voice_data):
         else:
             answer_question(voice_data)
 
-    elif there_exists(['robot bangun', 'bangun', 'hai robot bangun', 'hai robot aktifkan']):
+    elif there_exists(['robot bangun', 'hai robot bangun', 'hai robot aktifkan']):
         bangun = True
         try:
             port.write(b'%') # type: ignore
         except:
             pass
-        speak('Selamat Datang ' + username)
+        speak('Selamat Datang di Bali Digifest 2023, Buleleng Bisa')
 
 
-
-
-wiki.set_lang('id')
 try:
     os.remove('ttstmp.mp3')
 except:
     pass
 
-API_key = "78c067d5244c3b1392a1de0288f15207"
- 
-
-base_url = "http://api.openweathermap.org/data/2.5/weather?"
- 
-
-city_id = "Singaraja"
-
-Final_url = f"{base_url}appid={API_key}&q={city_id}&lang=id"
-username = "teman"
-myname = "D D Bot"
-ver = "2"
 comport = input('Masukkan Nama Port Dari Robot: ')
+try:
+    mqttclient = connect_mqtt()
+    mqttclient.loop_start()
+except:
+    mqttclient = None
 port = None
 
 try:
@@ -212,14 +343,17 @@ try:
 except:
     print("Tidak Bisa Terhubung Ke Badan Robot, Sebaiknya hubungkan untuk pengalaman yang lebih baik")
 
-listener = sr.Recognizer()
-
-
-
-
-r = sr.Recognizer()
-
-
 while (1):
-    voice_data = record_audio()
-    respond(voice_data)
+    if test == False:
+        res = record_audio(r, mic)
+    else:
+        res = {
+            "success": True,
+            "error": None,
+            "transcription": input("Enter: ")
+        }
+    
+    if res["error"] == None and res["transcription"] != None:
+        respond(res["transcription"])
+    else:
+        print(res["error"])
