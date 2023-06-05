@@ -23,7 +23,7 @@ from paho.mqtt import client as mqtt_client
 broker = 'broker.emqx.io'
 mqttport = 1883
 topic = "deanpop/lampujarakjauh/01"
-client_id = f'python-mqtt-{random.randint(0, 1000)}'
+client_id = f'python-mqtt-{random.randint(1000, 9999)}'
 def connect_mqtt():
     client = mqtt_client.Client(client_id)
 
@@ -35,9 +35,8 @@ def publish(client, state:int):
             msg = f"{state}"
             client.publish(topic, msg)
 
-
 bangun = False
-x = open('const.json').read()
+x = open('Testing/DDbot/const.json').read()
 x = json.loads(x)
 wiki.set_lang('id')
 question_words = x["question_words"]
@@ -67,7 +66,7 @@ def stem(text:str):
     return stemmer.stem(text)
 
 def answer_question(question:str):
-    respond = "Saya tidak mengerti"
+    respond = ""
     question = question.lower()
     stemmed = stem(question)
     tokenized = word_tokenize(question)
@@ -85,8 +84,12 @@ def answer_question(question:str):
                         respond = f"Aku sangat baik terimakasih telah bertanya, bagaimana denganmu {username}"
                 elif stemmed.find("hobi") != -1:
                     respond = f"Aku hanyalah kecerdasan buatan jadi aku tidak punya hobi"
+                elif question.lower().split('apa ')[1] == "tema bali digifest":
+                    respond = "Enabling Bali as Digital Creative Paradise"
+                elif question.lower().split('apa ')[1] == "tujuan bali digifest":
+                    respond = "Mengakselerasi transformasi Digital Kerthi Bali untuk mendukung terwujudnya visi Nangun Sat Kerthi Loka Bali"
                 elif tokenized[1] == "itu" and question.lower().split('apa itu ')[1] == 'bali digifest':
-                    respond = " Bali Digifest sedang membangun kolaborasi dengan para pemangku kepentingan yang menjadi bagian dari perkembangan ekosistem digital Bali, sebagai upaya untuk mempercepat realisasi visi Nangun Sat Kerthi Loka Bali melalui pola pengembangan universal yang direncanakan menuju era baru Bali. Para penyelenggara festival mengakui pentingnya mengadopsi pola pengembangan universal yang mencakup berbagai aspek kehidupan di pulau ini, termasuk budaya, ekonomi, teknologi, dan keberlanjutan.\n  Festival Digital Bali bertujuan untuk mendorong Bali menuju era baru inovasi, inklusivitas, dan pertumbuhan yang berkelanjutan melalui pola pengembangan universal yang direncanakan."
+                    respond = "Bali Digifest sedang membangun kolaborasi dengan para pemangku kepentingan yang menjadi bagian dari perkembangan ekosistem digital Bali, sebagai upaya untuk mempercepat realisasi visi Nangun Sat Kerthi Loka Bali melalui pola pengembangan universal yang direncanakan menuju era baru Bali.\nFestival Digital Bali bertujuan untuk Mengakselerasi transformasi Digital Kerthi Bali untuk mendukung terwujudnya visi Nangun Sat Kerthi Loka Bali"
             elif tokenized[0] == question_words[1]:
                 if stemmed.find("adalah cerdas buat") != -1:
                     respond = "Benar sekali!"
@@ -171,18 +174,21 @@ def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
 
 def speak(audio_string):
 
-    try:
-        tts = gTTS(text=audio_string, lang='id')
-        tts.save('ttstmp.mp3')
-        song = AudioSegment.from_mp3('ttstmp.mp3')
-        
+    if test == False:
         try:
-            port.write(b'.') #type: ignore
+            tts = gTTS(text=audio_string, lang='id')
+            tts.save('ttstmp.mp3')
+            song = AudioSegment.from_mp3('ttstmp.mp3')
+            
+            try:
+                port.write(b'.') #type: ignore
+            except:
+                pass
+            play(song)
         except:
             pass
-        play(song)
-    except:
-        pass
+    else:
+        print(audio_string)
 
     try:
         port.write(b',') #type: ignore
@@ -238,7 +244,7 @@ def respond(voice_data):
             speak("Baguslah kalau begitu")
         
         elif there_exists(["bisakah anda membantu saya", "bisakah kamu membantu saya", "bisakah kamu menolong saya", "bisakah anda menolong saya", "bantu saya", "tolong saya"]):
-            
+
             speak(f"Tentu saja aku bisa menolongmu")
 
         elif there_exists(["jam berapa sekarang", "katakan jam berapa sekarang", "sekarang jam berapa"]):
@@ -259,27 +265,28 @@ def respond(voice_data):
                 speak(word + " yang ke 419, kuat dan bangkit bersama")
             else:
                 speak(word)
-            
+
         elif there_exists(["putar lagu"]):
-            search_term = voice_data.lower().split("putar lagu")[-1]
+            search_term = voice_data.lower().split("putar lagu ")[1]
             if search_term != '':
                 
                 try:
                     speak(f"baiklah, memutar lagu {search_term}")
                     AppOpener.open('spotify')
-                    while pyautogui.pixel(119, 115) != (179, 179, 179):
+                    while pyautogui.pixel(124, 150) != (179, 179, 179):
                         pass
                     sleep(0.5)
-                    pyautogui.click(87,117)
+                    pyautogui.click(124,150)
+                    sleep(0.5)
                     pyautogui.write(search_term, 0.05)
-                    while pyautogui.pixel(902, 249) == (18, 18, 18):
+                    while pyautogui.pixel(1095, 312) == (18, 18, 18):
                         pass
-                    pyautogui.moveTo(902, 249)
-                    sleep(0.2)
-                    pyautogui.click(902, 249)
+                    pyautogui.moveTo(1095, 312)
+                    sleep(0.6)
+                    pyautogui.click(1095, 312)
                 except:
                     pass
-        
+
         elif there_exists(["hadiahnya mana", "mana hadiahnya"]):
             speak(f"baiklah {username}")
             webbrowser.get().open("https://youtu.be/NCzdcy4lnXk?t=24")
@@ -297,8 +304,11 @@ def respond(voice_data):
         elif there_exists(["matikan lampu"]):
             speak("mematikan lampu")
             publish(mqttclient, 0)
+            
+        elif there_exists(["kamu bodoh"]):
+            speak("kamu tidak boleh bicara seperti itu, itu tidak baik")
 
-        elif there_exists(["robot sapa pengunjung"]):
+        elif there_exists(["robot sapa pengunjung", "robot siapa pengunjung", "sapa pengunjung", "siapa pengunjung"]):
             speak('Selamat Datang di Bali Digifest 2023, Buleleng Bisa')
 
         elif there_exists(["keluar", "selamat tinggal", "matikan sistem", "matikan system", "sampai jumpa"]):
@@ -327,7 +337,8 @@ try:
 except:
     pass
 
-comport = input('Masukkan Nama Port Dari Robot: ')
+#comport = input('Masukkan Nama Port Dari Robot: ')
+comport = 'COM7'
 try:
     mqttclient = connect_mqtt()
     mqttclient.loop_start()
@@ -353,6 +364,9 @@ while (1):
         }
     
     if res["error"] == None and res["transcription"] != None:
-        respond(res["transcription"])
+        try:
+            respond(res["transcription"])
+        except:
+            pass
     else:
         print(res["error"])

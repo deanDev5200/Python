@@ -17,10 +17,9 @@ import datetime
 from time import ctime
 import serial
 import wikipedia as wiki
-import requests
 import os
 from paho.mqtt import client as mqtt_client
-from nltk.tokenize import word_tokenize
+
 broker = 'broker.emqx.io'
 mqttport = 1883
 topic = "deanpop/lampujarakjauh/01"
@@ -86,8 +85,12 @@ def answer_question(question:str):
                         respond = f"Aku sangat baik terimakasih telah bertanya, bagaimana denganmu {username}"
                 elif stemmed.find("hobi") != -1:
                     respond = f"Aku hanyalah kecerdasan buatan jadi aku tidak punya hobi"
+                elif question.lower().split('apa ')[1] == "tema bali digifest":
+                    respond = "Enabling Bali as Digital Creative Paradise"
+                elif question.lower().split('apa ')[1] == "tujuan bali digifest":
+                    respond = "Mengakselerasi transformasi Digital Kerthi Bali untuk mendukung terwujudnya visi Nangun Sat Kerthi Loka Bali"
                 elif tokenized[1] == "itu" and question.lower().split('apa itu ')[1] == 'bali digifest':
-                    respond = " Bali Digifest sedang membangun kolaborasi dengan para pemangku kepentingan yang menjadi bagian dari perkembangan ekosistem digital Bali, sebagai upaya untuk mempercepat realisasi visi Nangun Sat Kerthi Loka Bali melalui pola pengembangan universal yang direncanakan menuju era baru Bali. Para penyelenggara festival mengakui pentingnya mengadopsi pola pengembangan universal yang mencakup berbagai aspek kehidupan di pulau ini, termasuk budaya, ekonomi, teknologi, dan keberlanjutan.\n  Festival Digital Bali bertujuan untuk mendorong Bali menuju era baru inovasi, inklusivitas, dan pertumbuhan yang berkelanjutan melalui pola pengembangan universal yang direncanakan."
+                    respond = "Bali Digifest sedang membangun kolaborasi dengan para pemangku kepentingan yang menjadi bagian dari perkembangan ekosistem digital Bali, sebagai upaya untuk mempercepat realisasi visi Nangun Sat Kerthi Loka Bali melalui pola pengembangan universal yang direncanakan menuju era baru Bali.\nFestival Digital Bali bertujuan untuk Mengakselerasi transformasi Digital Kerthi Bali untuk mendukung terwujudnya visi Nangun Sat Kerthi Loka Bali"
             elif tokenized[0] == question_words[1]:
                 if stemmed.find("adalah cerdas buat") != -1:
                     respond = "Benar sekali!"
@@ -172,18 +175,21 @@ def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
 
 def speak(audio_string):
 
-    try:
-        tts = gTTS(text=audio_string, lang='id')
-        tts.save('ttstmp.mp3')
-        song = AudioSegment.from_mp3('ttstmp.mp3')
-        
+    if test == False:
         try:
-            port.write(b'.') #type: ignore
+            tts = gTTS(text=audio_string, lang='id')
+            tts.save('ttstmp.mp3')
+            song = AudioSegment.from_mp3('ttstmp.mp3')
+            
+            try:
+                port.write(b'.') #type: ignore
+            except:
+                pass
+            play(song)
         except:
             pass
-        play(song)
-    except:
-        pass
+    else:
+        print(audio_string)
 
     try:
         port.write(b',') #type: ignore
@@ -262,22 +268,23 @@ def respond(voice_data):
                 speak(word)
             
         elif there_exists(["putar lagu"]):
-            search_term = voice_data.lower().split("putar lagu")[-1]
+            search_term = voice_data.lower().split("putar lagu ")[1]
             if search_term != '':
                 
                 try:
                     speak(f"baiklah, memutar lagu {search_term}")
                     AppOpener.open('spotify')
-                    while pyautogui.pixel(119, 115) != (179, 179, 179):
+                    while pyautogui.pixel(124, 150) != (179, 179, 179):
                         pass
                     sleep(0.5)
-                    pyautogui.click(87,117)
+                    pyautogui.click(124,150)
+                    sleep(0.5)
                     pyautogui.write(search_term, 0.05)
-                    while pyautogui.pixel(902, 249) == (18, 18, 18):
+                    while pyautogui.pixel(1095, 312) == (18, 18, 18):
                         pass
-                    pyautogui.moveTo(902, 249)
-                    sleep(0.2)
-                    pyautogui.click(902, 249)
+                    pyautogui.moveTo(1095, 312)
+                    sleep(0.6)
+                    pyautogui.click(1095, 312)
                 except:
                     pass
         
