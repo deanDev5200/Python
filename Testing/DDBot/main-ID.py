@@ -237,7 +237,7 @@ def respond(voice_data):
     global bangun
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
-            speak('Selamat Datang di Bali Digifest 2023, Buleleng Bisa')
+            speak('Hai Juga')
         
         elif there_exists(["aku baik saja", "aku baik-baik saja", "saya baik-baik saja"]):
             
@@ -308,9 +308,6 @@ def respond(voice_data):
         elif there_exists(["kamu bodoh"]):
             speak("kamu tidak boleh bicara seperti itu, itu tidak baik")
 
-        elif there_exists(["robot sapa pengunjung", "robot siapa pengunjung", "sapa pengunjung", "siapa pengunjung"]):
-            speak('Selamat Datang di Bali Digifest 2023, Buleleng Bisa')
-
         elif there_exists(["keluar", "selamat tinggal", "matikan sistem", "matikan system", "sampai jumpa"]):
             speak("mematikan sistem...")
             
@@ -329,7 +326,6 @@ def respond(voice_data):
             port.write(b'%') # type: ignore
         except:
             pass
-        speak('Selamat Datang di Bali Digifest 2023, Buleleng Bisa')
 
 
 try:
@@ -338,7 +334,7 @@ except:
     pass
 
 #comport = input('Masukkan Nama Port Dari Robot: ')
-comport = 'COM7'
+comport = 'COM6'
 try:
     mqttclient = connect_mqtt()
     mqttclient.loop_start()

@@ -3,7 +3,7 @@ import cv2
 import httpx
 
 class MainClass:
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     detector = HandDetector(detectionCon=0.5, maxHands=2)
     i = 0
 
