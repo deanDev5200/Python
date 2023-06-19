@@ -26,8 +26,11 @@ start_time = "00:00:00"
 broker = 'broker.mqttdashboard.com'
 mqttport = 1883
 topic = "deanpop/lampujarakjauh/01"
+topic2 = "DEAN_DEV/aplikasiSmartFarm/0/set"
 client_id = f'python-mqtt-{random.randint(1000, 9999)}'
-temperature = ""
+temperature = -1
+humidity = -1
+pump_status = ""
 def connect_mqtt():
     client = mqtt_client.Client(client_id)
 
@@ -35,22 +38,25 @@ def connect_mqtt():
     return client
 
 def subscribe(client: mqtt_client.Client, sTopic: str):
-    if sTopic == "DEAN_DEV/aplikasiSmartFarm/0/temp":
-        def on_message(client, userdata, msg):
-            global temperature
-            temperature = msg.payload.decode()
-            print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
-    else:
-        def on_message(client, userdata, msg):
-            print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+    def on_message(client, userdata, msg):
+        global temperature
+        global humidity
+        global pump_status
+        data = json.loads(msg.payload.decode())
+        temperature = data['Temperature']
+        humidity = data['Humidity']
+        pump_status = data['WaterPump']
 
     client.subscribe(sTopic)
     client.on_message = on_message
 
-def publish(client, state:int):
+def publish(client, state:int, farm:bool):
         if client != None:
             msg = f"{state}"
-            client.publish(topic, msg)
+            if farm:
+                client.publish(topic2, msg)
+            else:
+                client.publish(topic, msg)
 
 bangun = False
 x = open('Testing/DDbot/const.json').read()
@@ -83,6 +89,9 @@ def stem(text:str):
     return stemmer.stem(text)
 
 def answer_question(question:str):
+    global temperature
+    global humidity
+    global pump_status
     respond = ""
     question = question.lower()
     stemmed = stem(question)
@@ -125,7 +134,7 @@ def answer_question(question:str):
             elif tokenized[0] == question_words[3]:
                 if stemmed.find("gempa kini") != -1:
                     respond = earthquake()
-                if tokenized[1] == "cuaca":
+                elif tokenized[1] == "cuaca":
                     if tokenized[2] != "di":
                         weather_data = requests.get(f"http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city_id}&lang=id").json()
                         city = True
@@ -162,9 +171,16 @@ def answer_question(question:str):
                         respond = f"Ini dia {search}"
                     except:
                         pass
-            elif tokenized[0] == question_words[14]:
-                if tokenized[1] == "suhu":
-                    respond = temperature
+                elif tokenized[1] == 'status' and tokenized[2] == 'pompa':
+                    respond = f"Status pompa smart farm saat ini adalah {pump_status}"
+                elif tokenized[1] == 'status' and tokenized[2] == 'smart' and tokenized[3] == 'farm':
+                    respond = f"Status smart farm saat ini adalah suhu: {temperature} derajat celcius, kelembaban: {humidity} persen, pompa {pump_status}"
+            elif tokenized[0] == question_words[4]:
+                print(tokenized[1])
+                if tokenized[1] == 'suhu':
+                    respond = f"Suhu di smart farm saat ini adalah {temperature} derajat celcius"
+                elif tokenized[1] == 'kelembaban':
+                    respond = f"Kelembaban di smart farm saat ini adalah {humidity} persen"
 
         print(respond)
         speak(respond)
@@ -332,11 +348,19 @@ def respond(voice_data):
 
         elif there_exists(["hidupkan lampu"]):
             speak("menghidupkan lampu")
-            publish(mqttclient, 1)
+            publish(mqttclient, 1, False)
 
         elif there_exists(["matikan lampu"]):
             speak("mematikan lampu")
-            publish(mqttclient, 0)
+            publish(mqttclient, 0, False)
+            
+        elif there_exists(["hidupkan pompa"]):
+            speak("menghidupkan pompa air")
+            publish(mqttclient, 0, True)
+
+        elif there_exists(["matikan pompa"]):
+            speak("mematikan pompa air")
+            publish(mqttclient, 1, True)
             
         elif there_exists(["kamu bodoh"]):
             speak("kamu tidak boleh bicara seperti itu, itu tidak baik")
@@ -400,9 +424,7 @@ comport = input('Masukkan Nama Port Dari Robot: ')
 #comport = 'COM6'
 try:
     mqttclient = connect_mqtt()
-    subscribe(mqttclient, "DEAN_DEV/aplikasiSmartFarm/0/temp")
-    subscribe(mqttclient, "DEAN_DEV/aplikasiSmartFarm/0/hum")
-    subscribe(mqttclient, "DEAN_DEV/aplikasiSmartFarm/0/pump")
+    subscribe(mqttclient, "DEAN_DEV/aplikasiSmartFarm/0/")
     mqttclient.loop_start()
 except:
     mqttclient = None
