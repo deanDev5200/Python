@@ -1,17 +1,22 @@
-import pyautogui
-import webbrowser
-from time import sleep
+from time import ctime
+from datetime import datetime
 
-search = "membuat nasi goreng"
-webbrowser.get().open("https://id.wikihow.com/Halaman-Utama")
-while pyautogui.pixel(983, 127) != (147, 184, 116):
-    pass
-sleep(0.2)
-pyautogui.click(783, 133)
-pyautogui.write(search, 0.05)
-pyautogui.click(912, 136)
-while pyautogui.pixel(710, 216) == (243, 243, 243) or pyautogui.pixel(710, 216) == (230, 238, 224):
-    pass
-sleep(0.7)
-pyautogui.click(710, 216)
-# x87 y117
+start_time = "10:00:00"
+end_time = "10:07:00"
+
+# convert time string to datetime
+t1 = datetime.strptime(start_time, "%H:%M:%S")
+print('Start time:', t1.time())
+
+t2 = datetime.strptime(end_time, "%H:%M:%S")
+print('End time:', t2.time())
+
+# get difference
+delta = t2 - t1
+
+# time difference in seconds
+print(f"Time difference is {delta.total_seconds()} seconds")
+
+# time difference in milliseconds
+ms = delta.total_seconds() * 1000
+print(f"Time difference is {ms} milliseconds")

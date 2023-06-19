@@ -1,11 +1,10 @@
 {
-    "city": "Denpasar",
+    "city": "Singaraja",
     "username": "teman",
     "myname": "D D Bot",
     "version": 2,
     "weather_key": "78c067d5244c3b1392a1de0288f15207",
     "question_words": ["apa", "apakah", "siapa", "bagaimana", "kenapa", "kapan", "dimana", 
-    "mengapa", "pernahkah", 
-   "mana", "bisakah", "maukah", 
+    "mengapa", "pernahkah", "mana", "bisakah", "maukah", 
    "haruskah", "punyakah", "berapa", "berapakah"]
 }

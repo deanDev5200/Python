@@ -1,6 +1,8 @@
 test = False
 import random
 import pyautogui
+import sys
+import glob
 import speech_recognition as sr
 from gtts import gTTS
 from bs4 import BeautifulSoup
@@ -13,22 +15,37 @@ from pydub import AudioSegment
 from pydub.playback import play
 from time import sleep
 import AppOpener
-import datetime
+from datetime import datetime
 from time import ctime
 import serial
 import wikipedia as wiki
 import os
 from paho.mqtt import client as mqtt_client
 
-broker = 'broker.emqx.io'
+start_time = "00:00:00"
+broker = 'broker.mqttdashboard.com'
 mqttport = 1883
 topic = "deanpop/lampujarakjauh/01"
 client_id = f'python-mqtt-{random.randint(1000, 9999)}'
+temperature = ""
 def connect_mqtt():
     client = mqtt_client.Client(client_id)
 
     client.connect(broker, mqttport)
     return client
+
+def subscribe(client: mqtt_client.Client, sTopic: str):
+    if sTopic == "DEAN_DEV/aplikasiSmartFarm/0/temp":
+        def on_message(client, userdata, msg):
+            global temperature
+            temperature = msg.payload.decode()
+            print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+    else:
+        def on_message(client, userdata, msg):
+            print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
+
+    client.subscribe(sTopic)
+    client.on_message = on_message
 
 def publish(client, state:int):
         if client != None:
@@ -99,7 +116,7 @@ def answer_question(question:str):
                 if tokenized[1] == "namamu":
                     respond = f"Nama saya adalah {myname} versi {ver} seenggol dong!"
                 elif tokenized[1] == "kamu":
-                    d = datetime.datetime.now().year
+                    d = datetime.now().year
                     respond = f"Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {str(d-2010)} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali"
                 else:
                     search_term = question.split('siapa ')[1]
@@ -145,6 +162,10 @@ def answer_question(question:str):
                         respond = f"Ini dia {search}"
                     except:
                         pass
+            elif tokenized[0] == question_words[14]:
+                if tokenized[1] == "suhu":
+                    respond = temperature
+
         print(respond)
         speak(respond)
 
@@ -234,10 +255,18 @@ def earthquake():
 
 def respond(voice_data):
     print(voice_data)
+    global start_time
     global bangun
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
-            speak('Hai Juga')
+            speak('Selamat datang di acara bakti sosial Persatuan Perantau Kelampuak')
+            t1 = datetime.strptime(start_time, "%H:%M:%S")
+
+            t2 = datetime.strptime(ctime().split(" ")[3], "%H:%M:%S")
+
+            delta = t2 - t1
+            if delta.seconds >= 420:
+                speak('Kenapa kamu baru menyapaku, aku kangen')
         
         elif there_exists(["aku baik saja", "aku baik-baik saja", "saya baik-baik saja"]):
             
@@ -246,6 +275,10 @@ def respond(voice_data):
         elif there_exists(["bisakah anda membantu saya", "bisakah kamu membantu saya", "bisakah kamu menolong saya", "bisakah anda menolong saya", "bantu saya", "tolong saya"]):
 
             speak(f"Tentu saja aku bisa menolongmu")
+
+        elif there_exists(["informasi gempa terkini", "info gempa terkini"]):
+
+            speak(earthquake())
 
         elif there_exists(["jam berapa sekarang", "katakan jam berapa sekarang", "sekarang jam berapa"]):
             time = ctime().split(" ")[3].split(":")[0:2]
@@ -321,22 +354,55 @@ def respond(voice_data):
             answer_question(voice_data)
 
     elif there_exists(['robot bangun', 'hai robot bangun', 'hai robot aktifkan']):
+        start_time = ctime().split(" ")[3]
         bangun = True
         try:
             port.write(b'%') # type: ignore
         except:
             pass
+        speak('Selamat datang di acara bakti sosial Persatuan Perantau Kelampuak')
 
+def serial_ports():
+    """ Lists serial port names
+
+        :raises EnvironmentError:
+            On unsupported or unknown platforms
+        :returns:
+            A list of the serial ports available on the system
+    """
+    if sys.platform.startswith('win'):
+        ports = ['COM%s' % (i + 1) for i in range(256)]
+    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+        # this excludes your current terminal "/dev/tty"
+        ports = glob.glob('/dev/tty[A-Za-z]*')
+    elif sys.platform.startswith('darwin'):
+        ports = glob.glob('/dev/tty.*')
+    else:
+        raise EnvironmentError('Unsupported platform')
+
+    result = []
+    for port in ports:
+        try:
+            s = serial.Serial(port)
+            s.close()
+            result.append(port)
+        except (OSError, serial.SerialException):
+            pass
+    return result
 
 try:
     os.remove('ttstmp.mp3')
 except:
     pass
 
-#comport = input('Masukkan Nama Port Dari Robot: ')
-comport = 'COM6'
+print('Port COM yang tersedia:', serial_ports())
+comport = input('Masukkan Nama Port Dari Robot: ')
+#comport = 'COM6'
 try:
     mqttclient = connect_mqtt()
+    subscribe(mqttclient, "DEAN_DEV/aplikasiSmartFarm/0/temp")
+    subscribe(mqttclient, "DEAN_DEV/aplikasiSmartFarm/0/hum")
+    subscribe(mqttclient, "DEAN_DEV/aplikasiSmartFarm/0/pump")
     mqttclient.loop_start()
 except:
     mqttclient = None
