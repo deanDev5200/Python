@@ -355,12 +355,20 @@ def respond(voice_data):
             publish(mqttclient, 0, False)
             
         elif there_exists(["hidupkan pompa"]):
-            speak("menghidupkan pompa air")
-            publish(mqttclient, 0, True)
+            if pump_status == "Hidup":
+                speak("Pompa sudah hidup")
+            elif temperature <= 24:
+                speak("Suhu sudah rendah")
+            else:
+                speak("menghidupkan pompa air")
+                publish(mqttclient, 0, True)
 
         elif there_exists(["matikan pompa"]):
-            speak("mematikan pompa air")
-            publish(mqttclient, 1, True)
+            if pump_status == "Mati":
+                speak("Pompa sudah mati")
+            else:
+                speak("menghidupkan pompa air")
+                publish(mqttclient, 0, True)
             
         elif there_exists(["kamu bodoh"]):
             speak("kamu tidak boleh bicara seperti itu, itu tidak baik")
