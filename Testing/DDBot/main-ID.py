@@ -279,6 +279,7 @@ def respond(voice_data):
             t1 = datetime.strptime(start_time, "%H:%M:%S")
 
             t2 = datetime.strptime(ctime().split(" ")[3], "%H:%M:%S")
+            print(t2, t1)
 
             delta = t2 - t1
             if delta.seconds >= 420:
