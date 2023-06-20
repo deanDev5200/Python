@@ -1,22 +1,17 @@
-from time import ctime
-from datetime import datetime
 
-start_time = "10:00:00"
-end_time = "10:07:00"
-
-# convert time string to datetime
-t1 = datetime.strptime(start_time, "%H:%M:%S")
-print('Start time:', t1.time())
-
-t2 = datetime.strptime(end_time, "%H:%M:%S")
-print('End time:', t2.time())
-
-# get difference
-delta = t2 - t1
-
-# time difference in seconds
-print(f"Time difference is {delta.total_seconds()} seconds")
-
-# time difference in milliseconds
-ms = delta.total_seconds() * 1000
-print(f"Time difference is {ms} milliseconds")
+from bs4 import BeautifulSoup
+from lxml import etree
+import requests
+  
+  
+URL = "https://poltracking.com/rilis-temuan-survei-nasional-poltracking-indonesia-tendensi-peta-politik-pilpres-2024/"
+  
+HEADERS = ({'User-Agent':
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
+            (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',\
+            'Accept-Language': 'en-US, en;q=0.5'})
+  
+webpage = requests.get(URL, headers=HEADERS)
+soup = BeautifulSoup(webpage.content, "html.parser")
+dom = etree.HTML(str(soup)) # type: ignore
+print(dom.xpath('//*[@id="post-29188"]/div/div[3]/div[1]/p[2]/text()[2]'))

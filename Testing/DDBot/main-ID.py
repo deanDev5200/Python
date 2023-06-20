@@ -2,6 +2,7 @@ test = False
 import random
 import pyautogui
 import sys
+from lxml import etree
 import glob
 import speech_recognition as sr
 from gtts import gTTS
@@ -22,15 +23,15 @@ import wikipedia as wiki
 import os
 from paho.mqtt import client as mqtt_client
 
-start_time = "00:00:00"
+start_time = '00:00:00'
 broker = 'broker.mqttdashboard.com'
 mqttport = 1883
-topic = "deanpop/lampujarakjauh/01"
-topic2 = "DEAN_DEV/aplikasiSmartFarm/0/set"
+topic = 'deanpop/lampujarakjauh/01'
+topic2 = 'DEAN_DEV/aplikasiSmartFarm/0/set'
 client_id = f'python-mqtt-{random.randint(1000, 9999)}'
-temperature = -1
-humidity = -1
-pump_status = ""
+temperature = ''
+humidity = ''
+pump_status = ''
 def connect_mqtt():
     client = mqtt_client.Client(client_id)
 
@@ -43,8 +44,9 @@ def subscribe(client: mqtt_client.Client, sTopic: str):
         global humidity
         global pump_status
         data = json.loads(msg.payload.decode())
-        temperature = data['Temperature']
-        humidity = data['Humidity']
+        temperature = '{:.2f}'.format(float(data['Temperature'])).replace('.', ',')
+
+        humidity = '{:.2f}'.format(float(data['Humidity'])).replace('.', ',')
         pump_status = data['WaterPump']
 
     client.subscribe(sTopic)
@@ -52,7 +54,7 @@ def subscribe(client: mqtt_client.Client, sTopic: str):
 
 def publish(client, state:int, farm:bool):
         if client != None:
-            msg = f"{state}"
+            msg = f'{state}'
             if farm:
                 client.publish(topic2, msg)
             else:
@@ -62,22 +64,22 @@ bangun = False
 x = open('Testing/DDbot/const.json').read()
 x = json.loads(x)
 wiki.set_lang('id')
-question_words = x["question_words"]
-API_key = x["weather_key"]
-city_id = x["city"]
-username = x["username"]
-myname = x["myname"]
-ver = x["version"]
+question_words = x['question_words']
+API_key = x['weather_key']
+city_id = x['city']
+username = x['username']
+myname = x['myname']
+ver = x['version']
 r = sr.Recognizer()
 mic = sr.Microphone()
 
 def find_wiki(q:str):
-    p = "Aku tidak menemukan apapun"
+    p = 'Aku tidak menemukan apapun'
 
     try:
         p = wiki.page(q)
-        m = p.content.split("\n")[0]
-        p = m.split(m.split("(")[1].split(")")[0])
+        m = p.content.split('\n')[0]
+        p = m.split(m.split('(')[1].split(')')[0])
         p = p[0] + p[1]
         return p
     except:
@@ -92,58 +94,70 @@ def answer_question(question:str):
     global temperature
     global humidity
     global pump_status
-    respond = ""
+    respond = ''
     question = question.lower()
     stemmed = stem(question)
     tokenized = word_tokenize(question)
-    if question != "":
-        if any(x in tokenized[0] for x in question_words):
+    if question != '':
+        if stemmed == 'info gempa kini' or stemmed == 'informasi gempa kini':
+            respond = earthquake()
+        elif any(x in tokenized[0] for x in question_words):
             if tokenized[0] == question_words[0]:
-                if stemmed.find("adalah cerdas buat") != -1:
-                    respond = "Benar sekali!"
-                elif stemmed.find("kabar") != -1:
-                    mon = ctime().split(" ")[1]
-                    day = ctime().split(" ")[2]
-                    if mon == "May" and day == "12":
-                        respond = f"Aku sangat baik terimakasih telah bertanya, Oh ya {username} hari ini ulang tahunmu. Selamat ulang tahun ya"
+                if stemmed.find('adalah cerdas buat') != -1:
+                    respond = 'Benar sekali!'
+                elif stemmed.find('kabar') != -1:
+                    mon = ctime().split(' ')[1]
+                    day = ctime().split(' ')[2]
+                    if mon == 'May' and day == '12':
+                        respond = f'Aku sangat baik terimakasih telah bertanya, Oh ya {username} hari ini ulang tahunmu. Selamat ulang tahun ya'
                     else:
-                        respond = f"Aku sangat baik terimakasih telah bertanya, bagaimana denganmu {username}"
-                elif stemmed.find("hobi") != -1:
-                    respond = f"Aku hanyalah kecerdasan buatan jadi aku tidak punya hobi"
-                elif question.lower().split('apa ')[1] == "tema bali digifest":
-                    respond = "Enabling Bali as Digital Creative Paradise"
-                elif question.lower().split('apa ')[1] == "tujuan bali digifest":
-                    respond = "Mengakselerasi transformasi Digital Kerthi Bali untuk mendukung terwujudnya visi Nangun Sat Kerthi Loka Bali"
-                elif tokenized[1] == "itu" and question.lower().split('apa itu ')[1] == 'bali digifest':
-                    respond = "Bali Digifest sedang membangun kolaborasi dengan para pemangku kepentingan yang menjadi bagian dari perkembangan ekosistem digital Bali, sebagai upaya untuk mempercepat realisasi visi Nangun Sat Kerthi Loka Bali melalui pola pengembangan universal yang direncanakan menuju era baru Bali.\nFestival Digital Bali bertujuan untuk Mengakselerasi transformasi Digital Kerthi Bali untuk mendukung terwujudnya visi Nangun Sat Kerthi Loka Bali"
+                        respond = f'Aku sangat baik terimakasih telah bertanya, bagaimana denganmu {username}'
+                elif question.lower().split('apa ')[1] == 'tema bali digifest':
+                    pass
+                elif question.lower().split('apa ')[1] == 'tujuan bali digifest':
+                    pass
+                elif tokenized[1] == 'itu' and question.lower().split('apa itu ')[1] == 'bali digifest':
+                    pass
             elif tokenized[0] == question_words[1]:
-                if stemmed.find("adalah cerdas buat") != -1:
-                    respond = "Benar sekali!"
-                elif stemmed.find("kamu cerdas buat") != -1:
-                    respond = "Benar sekali!"
+                if stemmed.find('adalah cerdas buat') != -1:
+                    respond = 'Benar sekali!'
+                elif stemmed.find('kamu cerdas buat') != -1:
+                    respond = 'Benar sekali!'
             elif tokenized[0] == question_words[2]:
-                if tokenized[1] == "namamu":
-                    respond = f"Nama saya adalah {myname} versi {ver} seenggol dong!"
-                elif tokenized[1] == "kamu":
+                if tokenized[1] == 'namamu':
+                    respond = f'Nama saya adalah {myname} versi {ver} seenggol dong!'
+                elif tokenized[1] == 'kamu':
                     d = datetime.now().year
-                    respond = f"Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {str(d-2010)} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali"
+                    respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {str(d-2010)} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
+                elif tokenized[1] == 'calon' and tokenized[2] == 'presiden':
+                    URL = "https://poltracking.com/rilis-temuan-survei-nasional-poltracking-indonesia-tendensi-peta-politik-pilpres-2024/"
+  
+                    HEADERS = ({'User-Agent':
+                                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
+                                (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',\
+                                'Accept-Language': 'en-US, en;q=0.5'})
+                    
+                    webpage = requests.get(URL, headers=HEADERS)
+                    soup = BeautifulSoup(webpage.content, "html.parser")
+                    dom = etree.HTML(str(soup)) # type: ignore
+                    respond = dom.xpath('//*[@id="post-29188"]/div/div[3]/div[1]/p[2]/text()[2]')[0]
                 else:
                     search_term = question.split('siapa ')[1]
                     print(search_term)
                     respond = find_wiki(search_term)
             elif tokenized[0] == question_words[3]:
-                if stemmed.find("gempa kini") != -1:
+                if stemmed.find('gempa kini') != -1:
                     respond = earthquake()
-                elif tokenized[1] == "cuaca":
-                    if tokenized[2] != "di":
-                        weather_data = requests.get(f"http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city_id}&lang=id").json()
+                elif tokenized[1] == 'cuaca':
+                    if tokenized[2] != 'di':
+                        weather_data = requests.get(f'http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city_id}&lang=id').json()
                         city = True
                     else:
                         try:
-                            city = question.split("bagaimana cuaca di ")[1]
+                            city = question.split('bagaimana cuaca di ')[1]
                         except:
                             city = city_id
-                        weather_data = requests.get(f"http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city}&lang=id").json()
+                        weather_data = requests.get(f'http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city}&lang=id').json()
                     temp = weather_data['main']['temp']
             
                     wind_speed = weather_data['wind']['speed']
@@ -153,11 +167,11 @@ def answer_question(question:str):
                         respond = f"Cuaca di {city_id}: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
                     else:
                         respond = f"Cuaca di {city}: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
-                elif tokenized[1] == "cara":
-                    search = question.split("bagaimana ")[1]
+                elif tokenized[1] == 'cara':
+                    search = question.split('bagaimana ')[1]
                     print(search)
                     try:
-                        webbrowser.get().open("https://id.wikihow.com/Halaman-Utama")
+                        webbrowser.get().open('https://id.wikihow.com/Halaman-Utama')
                         while pyautogui.pixel(983, 127) != (147, 184, 116):
                             pass
                         sleep(0.2)
@@ -168,19 +182,19 @@ def answer_question(question:str):
                             pass
                         sleep(0.7)
                         pyautogui.click(710, 216)
-                        respond = f"Ini dia {search}"
+                        respond = f'Ini dia {search}'
                     except:
                         pass
                 elif tokenized[1] == 'status' and tokenized[2] == 'pompa':
-                    respond = f"Status pompa smart farm saat ini adalah {pump_status}"
+                    respond = f'Status pompa smart farm saat ini {pump_status}'
                 elif tokenized[1] == 'status' and tokenized[2] == 'smart' and tokenized[3] == 'farm':
-                    respond = f"Status smart farm saat ini adalah suhu: {temperature} derajat celcius, kelembaban: {humidity} persen, pompa {pump_status}"
+                    respond = f'Status smart farm saat ini adalah suhu: {temperature} derajat celcius, kelembaban: {humidity} persen, pompa {pump_status}'
             elif tokenized[0] == question_words[4]:
                 print(tokenized[1])
                 if tokenized[1] == 'suhu':
-                    respond = f"Suhu di smart farm saat ini adalah {temperature} derajat celcius"
+                    respond = f'Suhu di smart farm saat ini adalah {temperature} derajat celcius'
                 elif tokenized[1] == 'kelembaban':
-                    respond = f"Kelembaban di smart farm saat ini adalah {humidity} persen"
+                    respond = f'Kelembaban di smart farm saat ini adalah {humidity} persen'
 
         print(respond)
         speak(respond)
@@ -192,20 +206,20 @@ def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
 
     # set up the response object
     response = {
-        "success": True,
-        "error": None,
-        "transcription": None
+        'success': True,
+        'error': None,
+        'transcription': None
     }
 
     try:
-        response["transcription"] = recognizer.recognize_google(audio, None, "id-ID")
+        response['transcription'] = recognizer.recognize_google(audio, None, 'id-ID')
     except sr.RequestError:
         # API was unreachable or unresponsive
-        response["success"] = False
-        response["error"] = "API unavailable"
+        response['success'] = False
+        response['error'] = 'API unavailable'
     except sr.UnknownValueError:
         # speech was unintelligible
-        response["error"] = "Unable to recognize speech"
+        response['error'] = 'Unable to recognize speech'
 
     return response
 
@@ -234,7 +248,7 @@ def speak(audio_string):
 
 def there_exists(terms):
     for term in terms:
-        if term in res["transcription"].lower():
+        if term in res['transcription'].lower():
             return True
 
 def earthquake():
@@ -246,9 +260,9 @@ def earthquake():
     nondate = soup.find('div', {'class': 'col-md-6 col-xs-6 gempabumi-detail no-padding'})
     nondate = nondate.findChildren('li') #type: ignore
 
-    magnitude = "0"
-    depth = "99 km"
-    loc = "laut"
+    magnitude = '0'
+    depth = '99 km'
+    loc = 'laut'
 
     i = 0
     for j in nondate:
@@ -273,55 +287,52 @@ def respond(voice_data):
     print(voice_data)
     global start_time
     global bangun
+    global temperature
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
             speak('Selamat datang di acara bakti sosial Persatuan Perantau Kelampuak')
-            t1 = datetime.strptime(start_time, "%H:%M:%S")
+            t1 = datetime.strptime(start_time, '%H:%M:%S')
 
-            t2 = datetime.strptime(ctime().split(" ")[3], "%H:%M:%S")
+            t2 = datetime.strptime(ctime().split(' ')[3], '%H:%M:%S')
             print(t2, t1)
 
             delta = t2 - t1
             if delta.seconds >= 420:
                 speak('Kenapa kamu baru menyapaku, aku kangen')
         
-        elif there_exists(["aku baik saja", "aku baik-baik saja", "saya baik-baik saja"]):
+        elif there_exists(['aku baik saja', 'aku baik-baik saja', 'saya baik-baik saja']):
             
-            speak("Baguslah kalau begitu")
+            speak('Baguslah kalau begitu')
         
-        elif there_exists(["bisakah anda membantu saya", "bisakah kamu membantu saya", "bisakah kamu menolong saya", "bisakah anda menolong saya", "bantu saya", "tolong saya"]):
+        elif there_exists(['bisakah anda membantu saya', 'bisakah kamu membantu saya', 'bisakah kamu menolong saya', 'bisakah anda menolong saya', 'bantu saya', 'tolong saya']):
 
-            speak(f"Tentu saja aku bisa menolongmu")
+            speak(f'Tentu saja aku bisa menolongmu')
 
-        elif there_exists(["informasi gempa terkini", "info gempa terkini"]):
-
-            speak(earthquake())
-
-        elif there_exists(["jam berapa sekarang", "katakan jam berapa sekarang", "sekarang jam berapa"]):
-            time = ctime().split(" ")[3].split(":")[0:2]
-            if time[0] == "00":
+        elif there_exists(['jam berapa sekarang', 'katakan jam berapa sekarang', 'sekarang jam berapa']):
+            time = ctime().split(' ')[3].split(':')[0:2]
+            if time[0] == '00':
                 hours = '12'
             else:
                 hours = time[0]
             minutes = time[1]
-            time = f"Sekarang jam {hours} {minutes}"
+            time = f'Sekarang jam {hours} {minutes}'
             speak(time)
 
         elif there_exists(['ucapkan']):
-            word = voice_data.split("ucapkan")[-1]
-            if word.find("selamat hari raya nyepi") != -1:
-                speak(word + "tahun saka 1945, semoga bahagia")
-            elif word.find("selamat ulang tahun untuk kota singaraja") != -1:
-                speak(word + " yang ke 419, kuat dan bangkit bersama")
+            word = voice_data.split('ucapkan')[-1]
+            if word.find('selamat hari raya nyepi') != -1:
+                speak(word + 'tahun saka 1945, semoga bahagia')
+            elif word.find('selamat ulang tahun untuk kota singaraja') != -1:
+                speak(word + ' yang ke 419, kuat dan bangkit bersama')
             else:
                 speak(word)
 
-        elif there_exists(["putar lagu"]):
-            search_term = voice_data.lower().split("putar lagu ")[1]
+        elif there_exists(['putar lagu']):
+            search_term = voice_data.lower().split('putar lagu ')[1]
             if search_term != '':
                 
                 try:
-                    speak(f"baiklah, memutar lagu {search_term}")
+                    speak(f'baiklah, memutar lagu {search_term}')
                     AppOpener.open('spotify')
                     while pyautogui.pixel(124, 150) != (179, 179, 179):
                         pass
@@ -337,45 +348,45 @@ def respond(voice_data):
                 except:
                     pass
 
-        elif there_exists(["hadiahnya mana", "mana hadiahnya"]):
-            speak(f"baiklah {username}")
-            webbrowser.get().open("https://youtu.be/NCzdcy4lnXk?t=24")
-            speak("Ini hadiahnya")
+        elif there_exists(['hadiahnya mana', 'mana hadiahnya']):
+            speak(f'baiklah {username}')
+            webbrowser.get().open('https://youtu.be/NCzdcy4lnXk?t=24')
+            speak('Ini hadiahnya')
 
-        elif there_exists(["buka aplikasi"]):
-            app = voice_data.lower().split("buka aplikasi")[-1].replace(' ', '')
-            speak(f"membuka {app}")
+        elif there_exists(['buka aplikasi']):
+            app = voice_data.lower().split('buka aplikasi')[-1].replace(' ', '')
+            speak(f'membuka {app}')
             AppOpener.open(app, match_closest=True)
 
-        elif there_exists(["hidupkan lampu"]):
-            speak("menghidupkan lampu")
+        elif there_exists(['hidupkan lampu']):
+            speak('menghidupkan lampu')
             publish(mqttclient, 1, False)
 
-        elif there_exists(["matikan lampu"]):
-            speak("mematikan lampu")
+        elif there_exists(['matikan lampu']):
+            speak('mematikan lampu')
             publish(mqttclient, 0, False)
             
-        elif there_exists(["hidupkan pompa"]):
-            if pump_status == "Hidup":
-                speak("Pompa sudah hidup")
-            elif temperature <= 24:
-                speak("Suhu sudah rendah")
+        elif there_exists(['hidupkan pompa']):
+            if pump_status == 'Hidup':
+                speak('Pompa sudah hidup')
+            elif float(temperature.replace(',','.')) <= 24:
+                speak('Suhu sudah rendah')
             else:
-                speak("menghidupkan pompa air")
+                speak('menghidupkan pompa air')
                 publish(mqttclient, 0, True)
 
-        elif there_exists(["matikan pompa"]):
-            if pump_status == "Mati":
-                speak("Pompa sudah mati")
+        elif there_exists(['matikan pompa']):
+            if pump_status == 'Mati':
+                speak('Pompa sudah mati')
             else:
-                speak("menghidupkan pompa air")
+                speak('menghidupkan pompa air')
                 publish(mqttclient, 0, True)
             
-        elif there_exists(["kamu bodoh"]):
-            speak("kamu tidak boleh bicara seperti itu, itu tidak baik")
+        elif there_exists(['kamu bodoh']):
+            speak('kamu tidak boleh bicara seperti itu, itu tidak baik')
 
-        elif there_exists(["keluar", "selamat tinggal", "matikan sistem", "matikan system", "sampai jumpa"]):
-            speak("mematikan sistem...")
+        elif there_exists(['keluar', 'selamat tinggal', 'matikan sistem', 'matikan system', 'sampai jumpa']):
+            speak('mematikan sistem...')
             
             try:
                 port.write(b'#') #type: ignore
@@ -387,7 +398,7 @@ def respond(voice_data):
             answer_question(voice_data)
 
     elif there_exists(['robot bangun', 'hai robot bangun', 'hai robot aktifkan']):
-        start_time = ctime().split(" ")[3]
+        start_time = ctime().split(' ')[3]
         bangun = True
         try:
             port.write(b'%') # type: ignore
@@ -396,17 +407,17 @@ def respond(voice_data):
         speak('Selamat datang di acara bakti sosial Persatuan Perantau Kelampuak')
 
 def serial_ports():
-    """ Lists serial port names
+    ''' Lists serial port names
 
         :raises EnvironmentError:
             On unsupported or unknown platforms
         :returns:
             A list of the serial ports available on the system
-    """
+    '''
     if sys.platform.startswith('win'):
         ports = ['COM%s' % (i + 1) for i in range(256)]
     elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-        # this excludes your current terminal "/dev/tty"
+        # this excludes your current terminal '/dev/tty'
         ports = glob.glob('/dev/tty[A-Za-z]*')
     elif sys.platform.startswith('darwin'):
         ports = glob.glob('/dev/tty.*')
@@ -433,7 +444,7 @@ comport = input('Masukkan Nama Port Dari Robot: ')
 #comport = 'COM6'
 try:
     mqttclient = connect_mqtt()
-    subscribe(mqttclient, "DEAN_DEV/aplikasiSmartFarm/0/")
+    subscribe(mqttclient, 'DEAN_DEV/aplikasiSmartFarm/0/')
     mqttclient.loop_start()
 except:
     mqttclient = None
@@ -442,24 +453,21 @@ port = None
 try:
     port = serial.Serial(port=comport, baudrate=9600)
     
-    print("Badan Robot, Terhubung")
+    print('Badan Robot, Terhubung')
 except:
-    print("Tidak Bisa Terhubung Ke Badan Robot, Sebaiknya hubungkan untuk pengalaman yang lebih baik")
+    print('Tidak Bisa Terhubung Ke Badan Robot, Sebaiknya hubungkan untuk pengalaman yang lebih baik')
 
 while (1):
     if test == False:
         res = record_audio(r, mic)
     else:
         res = {
-            "success": True,
-            "error": None,
-            "transcription": input("Enter: ")
+            'success': True,
+            'error': None,
+            'transcription': input('Enter: ')
         }
     
-    if res["error"] == None and res["transcription"] != None:
-        try:
-            respond(res["transcription"])
-        except:
-            pass
+    if res['error'] == None and res['transcription'] != None:
+        respond(res['transcription'])
     else:
-        print(res["error"])
+        print(res['error'])
