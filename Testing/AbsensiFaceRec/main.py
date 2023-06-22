@@ -39,7 +39,7 @@ if h.find('data.json') != -1:
     while x < len(dataObj['names']):
         studentNames.append(dataObj['names'][x])
         x += 1
-    f = subprocess.check_output('cd faces/ & dir /B', shell=True, universal_newlines=True)
+    f = subprocess.check_output('cd "Tes Gambar/" & dir /B', shell=True, universal_newlines=True)
     y = 0
     x = 0
     while x < len(studentNames):
@@ -167,7 +167,7 @@ if isValid:
                     cv2.putText(frame, name[0],(x1, y1 - 10), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 255, 0), 2)
                 else:
                     cv2.putText(frame, name,(x1, y1 - 10), cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 255), 2)
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 200), 4)
+                cv2.rectangle(frame, (x1, y1, x2, y2), (0, 0, 200), 4)
 
             cv2.imshow("Frame", frame)
         else:
