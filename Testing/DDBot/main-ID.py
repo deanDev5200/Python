@@ -103,9 +103,7 @@ def answer_question(question:str):
             respond = earthquake()
         elif any(x in tokenized[0] for x in question_words):
             if tokenized[0] == question_words[0]:
-                if stemmed.find('adalah cerdas buat') != -1:
-                    respond = 'Benar sekali!'
-                elif stemmed.find('kabar') != -1:
+                if stemmed.find('kabar') != -1:
                     mon = ctime().split(' ')[1]
                     day = ctime().split(' ')[2]
                     if mon == 'May' and day == '12':
@@ -293,7 +291,6 @@ def respond(voice_data):
             t1 = datetime.strptime(start_time, '%H:%M:%S')
 
             t2 = datetime.strptime(ctime().split(' ')[3], '%H:%M:%S')
-            print(t2, t1)
 
             delta = t2 - t1
             if delta.seconds >= 420:
@@ -314,7 +311,7 @@ def respond(voice_data):
             else:
                 hours = time[0]
             minutes = time[1]
-            time = f'Sekarang jam {hours} {minutes}'
+            time = f'Sekarang jam {hours}.{minutes}'
             speak(time)
 
         elif there_exists(['ucapkan', 'kalau begitu ucapkan']):
@@ -345,7 +342,7 @@ def respond(voice_data):
                         pass
                     pyautogui.moveTo(1095, 312)
                     sleep(0.6)
-                    pyautogui.click(1095, 312)
+                    pyautogui.click(1095, 312) 
                 except:
                     pass
 
@@ -370,8 +367,6 @@ def respond(voice_data):
         elif there_exists(['hidupkan pompa']):
             if pump_status == 'Hidup':
                 speak('Pompa sudah hidup')
-            elif float(temperature.replace(',','.')) <= 24:
-                speak('Suhu sudah rendah')
             else:
                 speak('menghidupkan pompa air')
                 publish(mqttclient, 0, True)
@@ -380,8 +375,8 @@ def respond(voice_data):
             if pump_status == 'Mati':
                 speak('Pompa sudah mati')
             else:
-                speak('menghidupkan pompa air')
-                publish(mqttclient, 0, True)
+                speak('mematikan pompa air')
+                publish(mqttclient, 1, True)
             
         elif there_exists(['kamu bodoh']):
             speak('kamu tidak boleh bicara seperti itu, itu tidak baik')
@@ -459,16 +454,19 @@ except:
     print('Tidak Bisa Terhubung Ke Badan Robot, Sebaiknya hubungkan untuk pengalaman yang lebih baik')
 
 while (1):
-    if test == False:
-        res = record_audio(r, mic)
-    else:
-        res = {
-            'success': True,
-            'error': None,
-            'transcription': input('Enter: ')
-        }
-    
-    if res['error'] == None and res['transcription'] != None:
-        respond(res['transcription'])
-    else:
-        print(res['error'])
+    try:
+        if test == False:
+            res = record_audio(r, mic)
+        else:
+            res = {
+                'success': True,
+                'error': None,
+                'transcription': input('Enter: ')
+            }
+        
+        if res['error'] == None and res['transcription'] != None:
+            respond(res['transcription'])
+        else:
+            print(res['error'])
+    except:
+        pass
