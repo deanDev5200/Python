@@ -10,31 +10,32 @@ class MainClass:
     def run(self):
         while True:
             success, img = MainClass.cap.read()
-            hands, img = MainClass.detector.findHands(img)
+            try:
+                hands, img = MainClass.detector.findHands(img)
 
-            if hands:
-                hand = hands[0]
-                lmList = hand["lmList"]
+                if hands:
+                    hand = hands[0]
+                    lmList = hand["lmList"]
 
-                if lmList:
-                    fingers = MainClass.detector.fingersUp(hand)
-                    print(fingers)
-                    if fingers == [0,1,1,0,0] and MainClass.i != 1:
-                        httpx.get("http://192.168.4.1/set?a=1")
-                        MainClass.i = 1
-                        print('1')
-                    elif fingers == [0,1,0,0,0] and MainClass.i != 2:
-                        httpx.get("http://192.168.4.1/set?a=3")
-                        MainClass.i = 2
-                    elif fingers == [0,0,0,0,1] and MainClass.i != 3:
-                        httpx.get("http://192.168.4.1/set?a=2")
-                        MainClass.i = 3
-                    elif fingers == [1,0,0,0,0] and MainClass.i != 4:
-                        httpx.get("http://192.168.4.1/set?a=4")
-                        MainClass.i = 4
-                    elif (fingers == [1,1,1,1,1] or fingers == [0,0,0,0,0]) and MainClass.i != 0:
-                        httpx.get("http://192.168.4.1/set?a=0")
-                        MainClass.i = 0
+                    if lmList:
+                        fingers = MainClass.detector.fingersUp(hand)
+                        if fingers == [0,1,1,0,0] and MainClass.i != 1:
+                            httpx.get("http://192.168.4.1/set?a=1", timeout=0.5)
+                            MainClass.i = 1
+                        elif fingers == [0,1,0,0,0] and MainClass.i != 2:
+                            httpx.get("http://192.168.4.1/set?a=3", timeout=0.5)
+                            MainClass.i = 2
+                        elif fingers == [0,0,0,0,1] and MainClass.i != 3:
+                            httpx.get("http://192.168.4.1/set?a=2", timeout=0.5)
+                            MainClass.i = 3
+                        elif fingers == [1,0,0,0,0] and MainClass.i != 4:
+                            httpx.get("http://192.168.4.1/set?a=4", timeout=0.5)
+                            MainClass.i = 4
+                        elif (fingers == [1,1,1,1,1] or fingers == [0,0,0,0,0]) and MainClass.i != 0:
+                            httpx.get("http://192.168.4.1/set?a=0", timeout=0.5)
+                            MainClass.i = 0
+            except:
+                pass
 
             cv2.imshow("Frame", img)
             if cv2.waitKey(1) & 0xFF == ord('q'):

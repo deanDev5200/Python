@@ -103,9 +103,7 @@ def answer_question(question:str):
             respond = earthquake()
         elif any(x in tokenized[0] for x in question_words):
             if tokenized[0] == question_words[0]:
-                if stemmed.find('adalah cerdas buat') != -1:
-                    respond = 'Benar sekali!'
-                elif stemmed.find('kabar') != -1:
+                if stemmed.find('kabar') != -1:
                     mon = ctime().split(' ')[1]
                     day = ctime().split(' ')[2]
                     if mon == 'May' and day == '12':
@@ -119,16 +117,15 @@ def answer_question(question:str):
                 elif tokenized[1] == 'itu' and question.lower().split('apa itu ')[1] == 'bali digifest':
                     pass
             elif tokenized[0] == question_words[1]:
-                if stemmed.find('adalah cerdas buat') != -1:
-                    respond = 'Benar sekali!'
-                elif stemmed.find('kamu cerdas buat') != -1:
-                    respond = 'Benar sekali!'
+                if stemmed.find('kamu tahu sekarang adalah ulang tahun pak jokowi'):
+                    d = datetime.now().year
+                    respond = f"oh ya, sekarang adalah ulang tahun bapak presiden joko widodo yang ke-{d-1961}, untung kamu mengingatkan."
             elif tokenized[0] == question_words[2]:
                 if tokenized[1] == 'namamu':
                     respond = f'Nama saya adalah {myname} versi {ver} seenggol dong!'
                 elif tokenized[1] == 'kamu':
                     d = datetime.now().year
-                    respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {str(d-2010)} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
+                    respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {d-2010} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
                 elif tokenized[1] == 'calon' and tokenized[2] == 'presiden':
                     URL = "https://poltracking.com/rilis-temuan-survei-nasional-poltracking-indonesia-tendensi-peta-politik-pilpres-2024/"
   
@@ -294,12 +291,11 @@ def respond(voice_data):
             t1 = datetime.strptime(start_time, '%H:%M:%S')
 
             t2 = datetime.strptime(ctime().split(' ')[3], '%H:%M:%S')
-            print(t2, t1)
 
             delta = t2 - t1
             if delta.seconds >= 420:
                 speak('Kenapa kamu baru menyapaku, aku kangen')
-        
+
         elif there_exists(['aku baik saja', 'aku baik-baik saja', 'saya baik-baik saja']):
             
             speak('Baguslah kalau begitu')
@@ -315,13 +311,15 @@ def respond(voice_data):
             else:
                 hours = time[0]
             minutes = time[1]
-            time = f'Sekarang jam {hours} {minutes}'
+            time = f'Sekarang jam {hours}.{minutes}'
             speak(time)
 
-        elif there_exists(['ucapkan']):
+        elif there_exists(['ucapkan', 'kalau begitu ucapkan']):
             word = voice_data.split('ucapkan')[-1]
             if word.find('selamat hari raya nyepi') != -1:
                 speak(word + 'tahun saka 1945, semoga bahagia')
+            if word.find('sesuatu untuk bapak presiden') != -1:
+                speak('selamat ulang tahun pak presiden jokowi, semoga panjang umur dan sehat selalu')
             elif word.find('selamat ulang tahun untuk kota singaraja') != -1:
                 speak(word + ' yang ke 419, kuat dan bangkit bersama')
             else:
@@ -344,7 +342,7 @@ def respond(voice_data):
                         pass
                     pyautogui.moveTo(1095, 312)
                     sleep(0.6)
-                    pyautogui.click(1095, 312)
+                    pyautogui.click(1095, 312) 
                 except:
                     pass
 
@@ -369,8 +367,6 @@ def respond(voice_data):
         elif there_exists(['hidupkan pompa']):
             if pump_status == 'Hidup':
                 speak('Pompa sudah hidup')
-            elif float(temperature.replace(',','.')) <= 24:
-                speak('Suhu sudah rendah')
             else:
                 speak('menghidupkan pompa air')
                 publish(mqttclient, 0, True)
@@ -379,8 +375,8 @@ def respond(voice_data):
             if pump_status == 'Mati':
                 speak('Pompa sudah mati')
             else:
-                speak('menghidupkan pompa air')
-                publish(mqttclient, 0, True)
+                speak('mematikan pompa air')
+                publish(mqttclient, 1, True)
             
         elif there_exists(['kamu bodoh']):
             speak('kamu tidak boleh bicara seperti itu, itu tidak baik')
