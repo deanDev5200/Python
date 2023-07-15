@@ -24,7 +24,7 @@ import os
 from paho.mqtt import client as mqtt_client
 
 start_time = '00:00:00'
-broker = 'broker.mqttdashboard.com'
+broker = 'broker.emqx.io'
 mqttport = 1883
 topic = 'deanpop/lampujarakjauh/01'
 topic2 = 'DEAN_DEV/aplikasiSmartFarm/0/set'
@@ -290,7 +290,7 @@ def respond(voice_data):
     global temperature
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
-            speak('Selamat datang di acara bakti sosial Persatuan Perantau Kelampuak')
+            speak('Selamat datang di channel youtube dean dev, jangan lupa like dan subscribe ya')
             t1 = datetime.strptime(start_time, '%H:%M:%S')
 
             t2 = datetime.strptime(ctime().split(' ')[3], '%H:%M:%S')
@@ -404,7 +404,7 @@ def respond(voice_data):
             port.write(b'%') # type: ignore
         except:
             pass
-        speak('Selamat datang di acara bakti sosial Persatuan Perantau Kelampuak')
+        speak('Selamat datang di channel youtube dean dev, jangan lupa like dan subscribe ya')
 
 def serial_ports():
     ''' Lists serial port names
@@ -458,16 +458,19 @@ except:
     print('Tidak Bisa Terhubung Ke Badan Robot, Sebaiknya hubungkan untuk pengalaman yang lebih baik')
 
 while (1):
-    if test == False:
-        res = record_audio(r, mic)
-    else:
-        res = {
-            'success': True,
-            'error': None,
-            'transcription': input('Enter: ')
-        }
-    
-    if res['error'] == None and res['transcription'] != None:
-        respond(res['transcription'])
-    else:
-        print(res['error'])
+    try:
+        if test == False:
+            res = record_audio(r, mic)
+        else:
+            res = {
+                'success': True,
+                'error': None,
+                'transcription': input('Enter: ')
+            }
+        
+        if res['error'] == None and res['transcription'] != None:
+            respond(res['transcription'])
+        else:
+            print(res['error'])
+    except:
+        pass
