@@ -1,7 +1,7 @@
-import mouse
+from pynput.mouse import Controller
 from time import sleep
 
-sleep(5)
-for i in range(0, 500):
-    mouse.click()
-    sleep(0.0001)
+mouse = Controller()
+sleep(2)
+
+mouse.scroll(0, -1)
