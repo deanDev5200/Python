@@ -1,4 +1,4 @@
-test = False
+test = True
 talkFlag = False
 
 from pydub import AudioSegment
