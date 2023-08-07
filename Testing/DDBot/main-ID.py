@@ -11,6 +11,7 @@ from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 import requests
 import webbrowser
 import json
+import pyautogui
 from pydub import AudioSegment
 from pydub.playback import play
 from time import sleep

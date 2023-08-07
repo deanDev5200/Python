@@ -1,11 +1,10 @@
 test = False
+talkFlag = False
 
 from pydub import AudioSegment
 from pydub.playback import play
 import random
-import sys
 from lxml import etree
-import glob
 import speech_recognition as sr
 from gtts import gTTS
 from bs4 import BeautifulSoup
@@ -15,7 +14,6 @@ import requests
 import json
 from time import ctime, sleep
 from datetime import datetime
-import serial
 import wikipedia as wiki
 import os
 from paho.mqtt import client as mqtt_client
@@ -72,7 +70,7 @@ username = x['username']
 myname = x['myname']
 ver = x['version']
 r = sr.Recognizer()
-mic = sr.Microphone()
+mic = sr.Microphone(0)
 
 
 def find_wiki(q:str):
@@ -203,14 +201,47 @@ def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
     return response
 
 def speak(audio_string):
-
+    global talkFlag
     try:
         tts = gTTS(text=audio_string, lang='id')
         tts.save('ttstmp.mp3')
         audio = AudioSegment.from_mp3('ttstmp.mp3')
+        talkFlag = True
+        d = threading.Thread(target=startTalk, daemon=True)
         play(audio)
+        talkFlag = False
+        stopTalk()
     except:
         pass
+
+def stopTalk():
+    kit.servo[0].angle = 90
+    kit.servo[1].angle = 90
+    kit.servo[2].angle = 135
+
+def eye():
+    nice = random.randrange(0, 2)
+    if nice == 0:
+        kit.servo[1].angle = 0
+    elif nice == 1:
+        kit.servo[1].angle = 90
+    elif nice == 2:
+        kit.servo[1].angle = 180
+
+def startTalk():
+    global talkFlag
+    count = False
+    while talkFlag:
+        if count:
+            luck = random.random()
+            if luck > 0.7:
+                eye()
+            kit.servo[0].angle = 90
+            count = False
+        else:
+            kit.servo[0].angle = 135
+            count = True
+        sleep(0.3)
 
 def there_exists(terms):
     for term in terms:
@@ -333,7 +364,6 @@ except:
 
 i2c = busio.I2C(SCL, SDA)
 pca = PCA9685(i2c)
-pca.frequency = 60
 kit = ServoKit(channels=16)
 kit.servo[0].angle = 90
 kit.servo[1].angle = 90
