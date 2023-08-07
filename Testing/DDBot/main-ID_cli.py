@@ -1,4 +1,7 @@
 test = False
+
+from pydub import AudioSegment
+from pydub.playback import play
 import random
 import sys
 from lxml import etree
@@ -10,16 +13,18 @@ from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 import requests
 import json
-from pydub import AudioSegment
-from pydub.playback import play
-from time import ctime
+from time import ctime, sleep
 from datetime import datetime
 import serial
 import wikipedia as wiki
 import os
 from paho.mqtt import client as mqtt_client
+from adafruit_servokit import ServoKit
+from board import SCL, SDA
+import busio
+from adafruit_pca9685 import PCA9685
+import threading
 
-start_time = '00:00:00'
 broker = 'broker.emqx.io'
 mqttport = 1883
 topic = 'deanpop/lampujarakjauh/01'
@@ -57,7 +62,7 @@ def publish(client, state:int, farm:bool):
                 client.publish(topic, msg)
 
 bangun = False
-x = open('Testing/DDbot/const.json').read()
+x = open('const.json').read()
 x = json.loads(x)
 wiki.set_lang('id')
 question_words = x['question_words']
@@ -68,6 +73,7 @@ myname = x['myname']
 ver = x['version']
 r = sr.Recognizer()
 mic = sr.Microphone()
+
 
 def find_wiki(q:str):
     p = 'Aku tidak menemukan apapun'
@@ -124,12 +130,12 @@ def answer_question(question:str):
                     respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {d-2010} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
                 elif tokenized[1] == 'calon' and tokenized[2] == 'presiden':
                     URL = "https://poltracking.com/rilis-temuan-survei-nasional-poltracking-indonesia-tendensi-peta-politik-pilpres-2024/"
-  
+
                     HEADERS = ({'User-Agent':
                                 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
                                 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',\
                                 'Accept-Language': 'en-US, en;q=0.5'})
-                    
+
                     webpage = requests.get(URL, headers=HEADERS)
                     soup = BeautifulSoup(webpage.content, "html.parser")
                     dom = etree.HTML(str(soup)) # type: ignore
@@ -152,9 +158,9 @@ def answer_question(question:str):
                             city = city_id
                         weather_data = requests.get(f'http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city}&lang=id').json()
                     temp = weather_data['main']['temp']
-            
+
                     wind_speed = weather_data['wind']['speed']
-            
+
                     description = weather_data['weather'][0]['description']
                     if city == True:
                         respond = f"Cuaca di {city_id}: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
@@ -170,8 +176,6 @@ def answer_question(question:str):
                     respond = f'Suhu di smart farm saat ini adalah {temperature} derajat celcius'
                 elif tokenized[1] == 'kelembaban':
                     respond = f'Kelembaban di smart farm saat ini adalah {humidity} persen'
-
-        print(respond)
         speak(respond)
 
 def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
@@ -200,24 +204,11 @@ def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
 
 def speak(audio_string):
 
-    if test == False:
-        try:
-            tts = gTTS(text=audio_string, lang='id')
-            tts.save('ttstmp.mp3')
-            song = AudioSegment.from_mp3('ttstmp.mp3')
-            
-            try:
-                port.write(b'.') #type: ignore
-            except:
-                pass
-            play(song)
-        except:
-            pass
-    else:
-        print(audio_string)
-
     try:
-        port.write(b',') #type: ignore
+        tts = gTTS(text=audio_string, lang='id')
+        tts.save('ttstmp.mp3')
+        audio = AudioSegment.from_mp3('ttstmp.mp3')
+        play(audio)
     except:
         pass
 
@@ -260,24 +251,17 @@ def earthquake():
 
 def respond(voice_data):
     print(voice_data)
-    global start_time
     global bangun
     global temperature
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
             speak('Selamat datang di channel youtube dean dev, jangan lupa like dan subscribe ya')
-            t1 = datetime.strptime(start_time, '%H:%M:%S')
 
-            t2 = datetime.strptime(ctime().split(' ')[3], '%H:%M:%S')
-
-            delta = t2 - t1
-            if delta.seconds >= 420:
-                speak('Kenapa kamu baru menyapaku, aku kangen')
 
         elif there_exists(['aku baik saja', 'aku baik-baik saja', 'saya baik-baik saja']):
-            
+
             speak('Baguslah kalau begitu')
-        
+
         elif there_exists(['bisakah anda membantu saya', 'bisakah kamu membantu saya', 'bisakah kamu menolong saya', 'bisakah anda menolong saya', 'bantu saya', 'tolong saya']):
 
             speak(f'Tentu saja aku bisa menolongmu')
@@ -310,7 +294,7 @@ def respond(voice_data):
         elif there_exists(['matikan lampu']):
             speak('mematikan lampu')
             publish(mqttclient, 0, False)
-            
+
         elif there_exists(['hidupkan pompa']):
             if pump_status == 'Hidup':
                 speak('Pompa sudah hidup')
@@ -324,17 +308,13 @@ def respond(voice_data):
             else:
                 speak('mematikan pompa air')
                 publish(mqttclient, 1, True)
-            
+
         elif there_exists(['kamu bodoh']):
             speak('kamu tidak boleh bicara seperti itu, itu tidak baik')
 
         elif there_exists(['keluar', 'selamat tinggal', 'matikan sistem', 'matikan system', 'sampai jumpa']):
             speak('mematikan sistem...')
-            
-            try:
-                port.write(b'#') #type: ignore
-            except:
-                pass
+
             bangun = False
 
         else:
@@ -343,77 +323,42 @@ def respond(voice_data):
     elif there_exists(['robot bangun', 'hai robot bangun', 'hai robot aktifkan']):
         start_time = ctime().split(' ')[3]
         bangun = True
-        try:
-            port.write(b'%') # type: ignore
-        except:
-            pass
+
         speak('Selamat datang di channel youtube dean dev, jangan lupa like dan subscribe ya')
-
-def serial_ports():
-    ''' Lists serial port names
-
-        :raises EnvironmentError:
-            On unsupported or unknown platforms
-        :returns:
-            A list of the serial ports available on the system
-    '''
-    if sys.platform.startswith('win'):
-        ports = ['COM%s' % (i + 1) for i in range(256)]
-    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-        # this excludes your current terminal '/dev/tty'
-        ports = glob.glob('/dev/tty[A-Za-z]*')
-    elif sys.platform.startswith('darwin'):
-        ports = glob.glob('/dev/tty.*')
-    else:
-        raise EnvironmentError('Unsupported platform')
-
-    result = []
-    for port in ports:
-        try:
-            s = serial.Serial(port)
-            s.close()
-            result.append(port)
-        except (OSError, serial.SerialException):
-            pass
-    return result
 
 try:
     os.remove('ttstmp.mp3')
 except:
     pass
 
-print('Port COM yang tersedia:', serial_ports())
-comport = input('Masukkan Nama Port Dari Robot: ')
-#comport = 'COM6'
+i2c = busio.I2C(SCL, SDA)
+pca = PCA9685(i2c)
+pca.frequency = 60
+kit = ServoKit(channels=16)
+kit.servo[0].angle = 90
+kit.servo[1].angle = 90
+kit.servo[2].angle = 135
 try:
     mqttclient = connect_mqtt()
     subscribe(mqttclient, 'DEAN_DEV/aplikasiSmartFarm/0/')
     mqttclient.loop_start()
 except:
     mqttclient = None
-port = None
 
-try:
-    port = serial.Serial(port=comport, baudrate=9600)
-    
-    print('Badan Robot, Terhubung')
-except:
-    print('Tidak Bisa Terhubung Ke Badan Robot, Sebaiknya hubungkan untuk pengalaman yang lebih baik')
-
+pca.channels[3].duty_cycle = 0xFFFF
+sleep(0.1)
+pca.channels[3].duty_cycle = 0x0000
 while (1):
-    try:
-        if test == False:
-            res = record_audio(r, mic)
-        else:
-            res = {
-                'success': True,
-                'error': None,
-                'transcription': input('Enter: ')
-            }
-        
-        if res['error'] == None and res['transcription'] != None:
-            respond(res['transcription'])
-        else:
-            print(res['error'])
-    except:
-        pass
+	if test == False:
+		res = record_audio(r, mic)
+	else:
+		res = {
+			'success': True,
+			'error': None,
+			'transcription': input('Enter: ')
+		}
+
+	if res['success'] and res['transcription'] != None:
+		respond(res['transcription'])
+	else:
+		print(res['error'])

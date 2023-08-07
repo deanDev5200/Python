@@ -1,6 +1,5 @@
 test = False
 import random
-import pyautogui
 import sys
 from lxml import etree
 import glob
@@ -128,12 +127,12 @@ def answer_question(question:str):
                     respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {d-2010} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
                 elif tokenized[1] == 'calon' and tokenized[2] == 'presiden':
                     URL = "https://poltracking.com/rilis-temuan-survei-nasional-poltracking-indonesia-tendensi-peta-politik-pilpres-2024/"
-  
+
                     HEADERS = ({'User-Agent':
                                 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
                                 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',\
                                 'Accept-Language': 'en-US, en;q=0.5'})
-                    
+
                     webpage = requests.get(URL, headers=HEADERS)
                     soup = BeautifulSoup(webpage.content, "html.parser")
                     dom = etree.HTML(str(soup)) # type: ignore
@@ -156,9 +155,9 @@ def answer_question(question:str):
                             city = city_id
                         weather_data = requests.get(f'http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city}&lang=id').json()
                     temp = weather_data['main']['temp']
-            
+
                     wind_speed = weather_data['wind']['speed']
-            
+
                     description = weather_data['weather'][0]['description']
                     if city == True:
                         respond = f"Cuaca di {city_id}: {description}, Suhu: {str(temp-273.15)[0:5].replace('.',',')} °C, Kecepatan Angin: {str(wind_speed).replace('.',',')} km/h"
@@ -227,7 +226,7 @@ def speak(audio_string):
             tts = gTTS(text=audio_string, lang='id')
             tts.save('ttstmp.mp3')
             song = AudioSegment.from_mp3('ttstmp.mp3')
-            
+
             try:
                 port.write(b'.') #type: ignore
             except:
@@ -297,9 +296,9 @@ def respond(voice_data):
                 speak('Kenapa kamu baru menyapaku, aku kangen')
 
         elif there_exists(['aku baik saja', 'aku baik-baik saja', 'saya baik-baik saja']):
-            
+
             speak('Baguslah kalau begitu')
-        
+
         elif there_exists(['bisakah anda membantu saya', 'bisakah kamu membantu saya', 'bisakah kamu menolong saya', 'bisakah anda menolong saya', 'bantu saya', 'tolong saya']):
 
             speak(f'Tentu saja aku bisa menolongmu')
@@ -328,7 +327,7 @@ def respond(voice_data):
         elif there_exists(['putar lagu']):
             search_term = voice_data.lower().split('putar lagu ')[1]
             if search_term != '':
-                
+
                 try:
                     speak(f'baiklah, memutar lagu {search_term}')
                     AppOpener.open('spotify')
@@ -363,7 +362,7 @@ def respond(voice_data):
         elif there_exists(['matikan lampu']):
             speak('mematikan lampu')
             publish(mqttclient, 0, False)
-            
+
         elif there_exists(['hidupkan pompa']):
             if pump_status == 'Hidup':
                 speak('Pompa sudah hidup')
@@ -377,13 +376,13 @@ def respond(voice_data):
             else:
                 speak('mematikan pompa air')
                 publish(mqttclient, 1, True)
-            
+
         elif there_exists(['kamu bodoh']):
             speak('kamu tidak boleh bicara seperti itu, itu tidak baik')
 
         elif there_exists(['keluar', 'selamat tinggal', 'matikan sistem', 'matikan system', 'sampai jumpa']):
             speak('mematikan sistem...')
-            
+
             try:
                 port.write(b'#') #type: ignore
             except:
@@ -448,7 +447,7 @@ port = None
 
 try:
     port = serial.Serial(port=comport, baudrate=9600)
-    
+
     print('Badan Robot, Terhubung')
 except:
     print('Tidak Bisa Terhubung Ke Badan Robot, Sebaiknya hubungkan untuk pengalaman yang lebih baik')
@@ -463,7 +462,7 @@ while (1):
                 'error': None,
                 'transcription': input('Enter: ')
             }
-        
+
         if res['error'] == None and res['transcription'] != None:
             respond(res['transcription'])
         else:
