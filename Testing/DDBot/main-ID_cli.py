@@ -1,8 +1,9 @@
-test = True
+test = False
 talkFlag = False
 
 from pydub import AudioSegment
-from pydub.playback import play
+import sounddevice as sd
+import soundfile as sf
 import random
 from lxml import etree
 import speech_recognition as sr
@@ -22,6 +23,8 @@ from board import SCL, SDA
 import busio
 from adafruit_pca9685 import PCA9685
 import threading
+sd.default.device = 2
+sd.default.samplerate = 48000
 
 broker = 'broker.emqx.io'
 mqttport = 1883
@@ -205,10 +208,15 @@ def speak(audio_string):
     try:
         tts = gTTS(text=audio_string, lang='id')
         tts.save('ttstmp.mp3')
-        audio = AudioSegment.from_mp3('ttstmp.mp3')
+        audio = AudioSegment.from_file('ttstmp.mp3')
+        conv = audio.set_frame_rate(48000)
+        conv.export('ttstmp2.mp3', format='mp3', bitrate='48000')
         talkFlag = True
         d = threading.Thread(target=startTalk, daemon=True)
-        play(audio)
+        data, fs = sf.read('ttstmp2.mp3')
+        d.start()
+        sd.play(data)
+        sd.wait()
         talkFlag = False
         stopTalk()
     except:
@@ -364,6 +372,7 @@ except:
 
 i2c = busio.I2C(SCL, SDA)
 pca = PCA9685(i2c)
+pca.frequency = 50
 kit = ServoKit(channels=16)
 kit.servo[0].angle = 90
 kit.servo[1].angle = 90
@@ -375,11 +384,11 @@ try:
 except:
     mqttclient = None
 
-pca.channels[3].duty_cycle = 0xFFFF
-sleep(0.1)
-pca.channels[3].duty_cycle = 0x0000
 while (1):
 	if test == False:
+		pca.channels[3].duty_cycle = 0xFFFF
+		sleep(0.1)
+		pca.channels[3].duty_cycle = 0x0000
 		res = record_audio(r, mic)
 	else:
 		res = {
@@ -389,6 +398,17 @@ while (1):
 		}
 
 	if res['success'] and res['transcription'] != None:
+		pca.channels[3].duty_cycle = 0xFFFF
+		sleep(0.1)
+		pca.channels[3].duty_cycle = 0x0000
+		sleep(0.1)
+		pca.channels[3].duty_cycle = 0xFFFF
+		sleep(0.1)
+		pca.channels[3].duty_cycle = 0x0000
 		respond(res['transcription'])
 	else:
+		pca.channels[3].duty_cycle = 0xFFFF
+		sleep(0.25)
+		pca.channels[3].duty_cycle = 0x0000
+		sleep(0.1)
 		print(res['error'])
