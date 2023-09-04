@@ -1,19 +1,21 @@
+from pynput import mouse
+from time import sleep
 
-import glob
+sleep(5)
+ms = mouse.Controller()
+def move_smooth(xm, ym, t):
+    for i in range(t):
+        if i < t/2:
+            h = i
+        else:
+            h = t - i
+        ms.move(h*xm, h*ym)
+        sleep(1/60)
 
-import cv2
-
-
-img_array = []
-for filename in glob.glob('D:/Python/Testing/MC/Bot/result/*.jpg'):
-    img = cv2.imread(filename)
-    height, width, layers = img.shape
-    size = (width,height)
-    img_array.append(img)
-
-
-out = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'MJPG'), 10, size)
- 
-for i in range(len(img_array)):
-    out.write(img_array[i])
-out.release()
+while True:
+    move_smooth(0, 2, 20)
+    ms.click(mouse.Button.left)
+    sleep(0.3)
+    move_smooth(0, -2, 20)
+    ms.click(mouse.Button.left)
+    sleep(0.3)

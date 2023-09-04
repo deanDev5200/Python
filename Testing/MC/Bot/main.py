@@ -7,6 +7,7 @@ from mss import mss
 from time import sleep
 from PIL import Image
 
+sleep(10)
 count = 0
 mouse = pynput.mouse.Controller()
 def move_smooth(xm, ym, t):
@@ -19,9 +20,15 @@ def move_smooth(xm, ym, t):
         sleep(1/60)
 
 mon = {'left': 0, 'top': 0, 'width': 1920, 'height': 1080}
-move_smooth(0, 1, 10)
+
 with mss() as sct:
     while True:
+        move_smooth(0, 1, 20)
+        sleep(0.3)
+        mouse.click(pynput.mouse.Button.left)
+        move_smooth(0, -1, 20)
+        sleep(0.3)
+        mouse.click(pynput.mouse.Button.left)
         screenShot = sct.grab(mon)
         img = Image.frombytes(
             'RGB', 
@@ -44,10 +51,9 @@ with mss() as sct:
             print("Error")
         else:
             winsound.Beep(1000, 100)
-            
             print("Image is fine")
         cv2.imwrite(f"Testing/MC/Bot/result/{count}.jpg", color_image)
-        cv2.imshow('muhahahahahhah', color_image)
+        cv2.imshow(' ', color_image)
         count = count + 1
         if cv2.waitKey(33) & 0xFF in (
             ord('q'),
