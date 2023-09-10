@@ -1,14 +1,40 @@
-import requests, socket, qrcode, cv2, socket, random, threading
+import requests, qrcode, cv2, socket, random, threading
 
 HOST = "127.0.0.1"
 PORT = 60000 + random.randrange(1, 5534)
+done = False
+
+def increase(data:str):
+    myobj = {'un': data.split(':')[0], 'pw': data.split(':')[1]}
+
+    x = requests.post('http://localhost/increase.php', data=myobj)
+
+    if x.text != "Wrong" and x.text != "Invalid" and x.text != "Error":
+        if x.text == "Success":
+            print("Operation Succeded")
+            y = requests.post('http://localhost', data=myobj)
+            try:
+                print("Points:" + int(y.text))
+            except:
+                print(y.text)
+            return y.text
+        else:
+            try:
+                print("Points:" + int(x.text))
+            except:
+                print(x.text)
+    else:
+        print("Operation Not Completed:\n" + x.text)
+    return False
 
 def show_ip_qr():
+        global HOST, done
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(0)
         try:
             s.connect(('10.254.254.254', 1))
             IP = s.getsockname()[0] + ':' + str(PORT)
+            HOST = IP.split(':')[0]
         except Exception:
             IP = '127.0.0.1:' + str(PORT)
         finally:
@@ -37,39 +63,32 @@ def show_ip_qr():
         img.save('Testing/PET/qr.png')
         img = cv2.imread('Testing/PET/qr.png')
         cv2.imshow('QR Code', img)
+        done = True
         while True:
-            if cv2.waitKey(10) & 0xFF == ord('q'):
+            if cv2.waitKey(10) & 0xFF == ord('-'):
                 break
 
 t = threading.Thread(target=show_ip_qr)
 t.start()
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    s.bind((HOST, PORT))
-    s.listen()
-    conn, addr = s.accept()
-    with conn:
-        print(f"Connected by {addr}")
-        while True:
-            data = conn.recv(1024)
-            print(data.decode())
-            break
-myobj = {'un': '', 'pw': 'deanpop5200'}
+while not done:
+    pass
 
-x = requests.post('http://localhost/increase.php', data=myobj)
-
-if x.text != "Wrong" and x.text != "Invalid" and x.text != "Error":
-    if x.text == "Success":
-        print("Operation Succeded")
-        y = requests.post('http://localhost', data=myobj)
-        try:
-            print("Points:" + int(y.text))
-        except:
-            print(y.text)
-    else:
-        try:
-            print("Points:" + int(x.text))
-        except:
-            print(x.text)
-else:
-    print("Operation Not Completed:\n" + x.text)
+data = ''
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as soc:
+    soc.bind((HOST, PORT))
+    while True:
+        soc.listen()
+        conn, addr = soc.accept()
+        with conn:
+            while True:
+                dataT = conn.recv(1024)
+                data = dataT.decode()
+                data = data.rstrip()
+                stat = increase(data=data)
+                if stat:
+                    conn.sendall(stat.encode())
+                else:
+                    conn.sendall(b'n')
+                conn.close()
+                break
