@@ -1,26 +1,15 @@
 test = False
-import random
-import sys
+import glob, speech_recognition as sr, sys, random, requests, webbrowser, json, pyautogui, AppOpener, serial, wikipedia as wiki, os
 from lxml import etree
-import glob
-import speech_recognition as sr
 from gtts import gTTS
 from bs4 import BeautifulSoup
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
-import requests
-import webbrowser
-import json
-import pyautogui
 from pydub import AudioSegment
 from pydub.playback import play
 from time import sleep
-import AppOpener
 from datetime import datetime
 from time import ctime
-import serial
-import wikipedia as wiki
-import os
 from paho.mqtt import client as mqtt_client
 
 start_time = '00:00:00'
@@ -122,7 +111,7 @@ def answer_question(question:str):
                     respond = f"oh ya, sekarang adalah ulang tahun bapak presiden joko widodo yang ke-{d-1961}, untung kamu mengingatkan."
             elif tokenized[0] == question_words[2]:
                 if tokenized[1] == 'namamu':
-                    respond = f'Nama saya adalah {myname} versi {ver} seenggol dong!'
+                    respond = f'Nama saya adalah {myname} versi {ver} senggol dong!'
                 elif tokenized[1] == 'kamu':
                     d = datetime.now().year
                     respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {d-2010} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
@@ -183,7 +172,7 @@ def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
         recognizer.adjust_for_ambient_noise(source)
         audio = recognizer.listen(source)
 
-    # set up the response object
+
     response = {
         'success': True,
         'error': None,
@@ -193,11 +182,11 @@ def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
     try:
         response['transcription'] = recognizer.recognize_google(audio, None, 'id-ID')
     except sr.RequestError:
-        # API was unreachable or unresponsive
+
         response['success'] = False
         response['error'] = 'API unavailable'
     except sr.UnknownValueError:
-        # speech was unintelligible
+
         response['error'] = 'Unable to recognize speech'
 
     return response
@@ -269,7 +258,7 @@ def respond(voice_data):
     global temperature
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
-            speak('Selamat datang di channel youtube dean dev, jangan lupa like dan subscribe ya')
+            speak('Halo ' + username)
             t1 = datetime.strptime(start_time, '%H:%M:%S')
 
             t2 = datetime.strptime(ctime().split(' ')[3], '%H:%M:%S')
@@ -382,7 +371,7 @@ def respond(voice_data):
             port.write(b'%') # type: ignore
         except:
             pass
-        speak('Selamat datang di channel youtube dean dev, jangan lupa like dan subscribe ya')
+        speak('Halo' + username)
 
 def serial_ports():
     ''' Lists serial port names
@@ -417,9 +406,15 @@ try:
 except:
     pass
 
-print('Port COM yang tersedia:', serial_ports())
-comport = input('Masukkan Nama Port Dari Robot: ')
-#comport = 'COM6'
+
+print('Port COM yang tersedia:')
+for port in serial_ports():
+    print('-', port)
+try:
+    comport = 'COM5'
+except:
+    comport = input('Masukkan Nama Port Dari Robot: ')
+
 try:
     mqttclient = connect_mqtt()
     subscribe(mqttclient, 'DEAN_DEV/aplikasiSmartFarm/0/')

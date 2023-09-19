@@ -130,22 +130,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as soc:
                     break
                 detections = []
                 results = model(source=frame)
+                ser.write(b'1')
+                time.sleep(0.05)
 
                 for detection in results[0].boxes:
                     class_index = detection.cls
                     detections.append(int(class_index[0]))
 
                 if detections == [39] or detections == [40]:
-                    ser.write(b'3')
-                    time.sleep(0.05)
-                    ser.write(b'1')
-                    time.sleep(0.05)
                     if lastDetect == detections:
                         c = c + 1
-                        print(c)
-                    else:
+                    elif c > 0:
                         c = c - 1
-                        print(c, 'f')
                     
                     try:
                         ser.write(b'2')
@@ -162,13 +158,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as soc:
                         else:
                             conn.sendall(b'n')
                         time.sleep(2)
-                        lastTime = time.time()
                         ser.write(b'1')
                         time.sleep(0.05)
                         ser.write(b'4')
                         time.sleep(0.05)
                     except:
                         pass
+                    lastTime = time.time()
                 if time.time() > lastTime+30:
                     break
                 lastDetect = detections
