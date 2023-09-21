@@ -11,7 +11,6 @@ from time import sleep
 from datetime import datetime
 from time import ctime
 from paho.mqtt import client as mqtt_client
-
 start_time = '00:00:00'
 broker = 'broker.emqx.io'
 mqttport = 1883
@@ -21,6 +20,20 @@ client_id = f'python-mqtt-{random.randint(1000, 9999)}'
 temperature = ''
 humidity = ''
 pump_status = ''
+#-----------------------------------------------------#
+bangun = False
+x = open('Testing/DDbot/const.json').read()
+x = json.loads(x)
+wiki.set_lang('id')
+question_words = x['question_words']
+API_key = x['weather_key']
+city_id = x['city']
+username = x['username']
+myname = x['myname']
+ver = x['version']
+r = sr.Recognizer()
+mic = sr.Microphone()
+
 def connect_mqtt():
     client = mqtt_client.Client(client_id)
 
@@ -48,19 +61,6 @@ def publish(client, state:int, farm:bool):
                 client.publish(topic2, msg)
             else:
                 client.publish(topic, msg)
-
-bangun = False
-x = open('Testing/DDbot/const.json').read()
-x = json.loads(x)
-wiki.set_lang('id')
-question_words = x['question_words']
-API_key = x['weather_key']
-city_id = x['city']
-username = x['username']
-myname = x['myname']
-ver = x['version']
-r = sr.Recognizer()
-mic = sr.Microphone()
 
 def find_wiki(q:str):
     p = 'Aku tidak menemukan apapun'
@@ -253,9 +253,7 @@ def earthquake():
 
 def respond(voice_data):
     print(voice_data)
-    global start_time
-    global bangun
-    global temperature
+    global start_time, bangun, temperature
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
             speak('Halo ' + username)

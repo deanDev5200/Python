@@ -1,17 +1,38 @@
-import requests, qrcode, cv2, socket, random, threading, serial, time
+import requests, qrcode, cv2, random, threading, serial, time
 from ultralytics import YOLO
-HOST = "127.0.0.1"
-PORT = 60000 + random.randrange(1, 5534)
+from paho.mqtt import client as mqtt_client
+def connect_mqtt():
+    def on_connect(client, userdata, flags, rc):
+        if rc == 0:
+            print("Connected to MQTT Broker!")
+        else:
+            print("Failed to connect, return code %d\n", rc)
+    client = mqtt_client.Client(client_id)
+    client.on_connect = on_connect
+    client.connect(broker, port)
+    return client
+
+broker = 'broker.mqttdashboard.com'
+port = 1883
+topic = "python/mqtt"
+client_id = f'python-mqtt-{random.randint(0, 1000)}'
 data = ''
 lastTime = 0
 spam = False
 lastDetect = []
 _un = ""
+block = True
+dataT = ""
 _pw = ""
 c = 0
 done = False
 model = YOLO("yolov8m.pt")
-ser = serial.Serial('COM6', 9600)
+mqttclient = connect_mqtt()
+mqttclient.loop_start()
+try:
+    ser = serial.Serial('COM6', 9600)
+except:
+    pass
 cap = cv2.VideoCapture(2)
 
 def increase(un:str, pw:str):
@@ -61,34 +82,16 @@ def decrease(un:str, pw:str):
     return False
 
 def show_ip_qr():
-        global HOST, done
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.settimeout(0)
-        try:
-            s.connect(('10.254.254.254', 1))
-            IP = s.getsockname()[0] + ':' + str(PORT)
-            HOST = IP.split(':')[0]
-        except Exception:
-            IP = '127.0.0.1:' + str(PORT)
-        finally:
-            s.close()
-        IP = IP.replace('1', 'q')
-        IP = IP.replace('2', 'a')
-        IP = IP.replace('3', 'z')
-        IP = IP.replace('4', 'e')
-        IP = IP.replace('5', 'd')
-        IP = IP.replace('6', 'c')
-        IP = IP.replace('7', 'w')
-        IP = IP.replace('8', 's')
-        IP = IP.replace('9', 'x')
-        IP = IP.replace('0', 'r')
-        IP = IP.replace('.', 'f')
-        IP = IP.replace(':', 'v')
+        global HOST, done, topic
+        id = random.randint(10000, 99999)
+        topic = str(id)
+        mqttclient.subscribe(topic+'/up')
+        mqttclient.on_message = handler
         qr = qrcode.QRCode(version = 1,
                    box_size = 10,
                    border = 5)
  
-        qr.add_data(IP)
+        qr.add_data(id)
         
         qr.make(fit = True)
         img = qr.make_image(fill_color = 'black',
@@ -101,76 +104,108 @@ def show_ip_qr():
             if cv2.waitKey(10) & 0xFF == ord('-'):
                 break
 
+def get(un:str, pw:str):
+    myobj = {'un': un, 'pw': pw}
+
+    x = requests.post('http://localhost/', data=myobj)
+
+    if x.text != "Wrong" and x.text != "Invalid" and x.text != "Error" and x.text.find("<br") == -1:
+        return x.text
+    return False
+
+def handler(client, userdata, msg):
+    global dataT, block
+    data = msg.payload.decode()
+    dataT = data
+    reply = get(data.split(':')[0], data.split(':')[1])
+    if reply:
+        mqttclient.publish(topic+'/pts', reply)
+        try:
+            p = data.split(':')[2]
+        except:
+            block = False
+
 t = threading.Thread(target=show_ip_qr)
 t.start()
 
 while not done:
     pass
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as soc:
-    print(HOST, PORT)
-    soc.bind((HOST, PORT))
+while True:
+    while block:
+        pass
+    lastTime = time.time()
+    try:
+        ser.write(b'1')
+        time.sleep(0.05)
+        ser.write(b'4')
+        time.sleep(0.05)
+        ser.write(b'+')
+        time.sleep(0.05)
+    except:
+        pass
+    data = dataT
+    _un = data.split(':')[0]
+    _pw = data.split(':')[1]
     while True:
-        soc.listen()
-        conn, addr = soc.accept()
-        with conn:
-            dataT = conn.recv(1024)
-            lastTime = time.time()
+        ret, frame = cap.read()
+        if not ret:
+            break
+        detections = []
+        results = model(source=frame)
+        try:
             ser.write(b'1')
             time.sleep(0.05)
-            ser.write(b'4')
-            data = dataT.decode()
-            data = data.replace(" ", "")
-            data = data.split("\r\n")
-            _un = data[1].split(':')[1]
-            _pw = data[2].split(':')[1]
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                detections = []
-                results = model(source=frame)
-                ser.write(b'1')
+        except:
+            pass
+
+        for detection in results[0].boxes:
+            class_index = detection.cls
+            detections.append(int(class_index[0]))
+
+        if detections == [39] or detections == [40]:
+            if lastDetect == detections:
+                c = c + 1
+            elif c > 0:
+                c = c - 1
+            
+            try:
+                try:
+                    ser.write(b'2')
+                    time.sleep(0.05)
+                    ser.write(b'3')
+                    time.sleep(0.05)
+                except:
+                    pass
+                if c > 1:
+                    stat = decrease(un=_un, pw=_pw)
+                else:
+                    stat = increase(un=_un, pw=_pw)
+                mqttclient.publish(topic+'/pts', stat)
                 time.sleep(0.05)
-
-                for detection in results[0].boxes:
-                    class_index = detection.cls
-                    detections.append(int(class_index[0]))
-
-                if detections == [39] or detections == [40]:
-                    if lastDetect == detections:
-                        c = c + 1
-                    elif c > 0:
-                        c = c - 1
-                    
-                    try:
-                        ser.write(b'2')
-                        time.sleep(0.05)
-                        ser.write(b'3')
-                        time.sleep(0.05)
-                        if c > 1:
-                            stat = decrease(un=_un, pw=_pw)
-                        else:
-                            stat = increase(un=_un, pw=_pw)
-                        time.sleep(0.05)
-                        if stat:
-                            conn.sendall(stat.encode())
-                        else:
-                            conn.sendall(b'n')
-                        time.sleep(2)
-                        ser.write(b'1')
-                        time.sleep(0.05)
-                        ser.write(b'4')
-                        time.sleep(0.05)
-                    except:
-                        pass
-                    lastTime = time.time()
-                if time.time() > lastTime+30:
-                    break
-                lastDetect = detections
-            conn.close()
-            ser.write(b'3')
-            time.sleep(0.05)
-            ser.write(b'1')
-            time.sleep(0.05)
-            c = 0
+                try:
+                    time.sleep(2)
+                    ser.write(b'1')
+                    time.sleep(0.05)
+                    ser.write(b'4')
+                    time.sleep(0.05)
+                except:
+                    pass
+            except:
+                pass
+            lastTime = time.time()
+        if time.time() > lastTime+24:
+            break
+        lastDetect = detections
+    block = True
+    mqttclient.publish(topic+'/pts', 'end')
+    try:
+        ser.write(b'3')
+        time.sleep(0.05)
+        ser.write(b'1')
+        time.sleep(0.05)
+        ser.write(b'-')
+        time.sleep(0.05)
+    except:
+        pass
+    c = 0
