@@ -106,15 +106,13 @@ def answer_question(question:str):
                 elif tokenized[1] == 'itu' and question.lower().split('apa itu ')[1] == 'bali digifest':
                     pass
             elif tokenized[0] == question_words[1]:
-                if stemmed.find('kamu tahu sekarang adalah ulang tahun pak jokowi'):
-                    d = datetime.now().year
-                    respond = f"oh ya, sekarang adalah ulang tahun bapak presiden joko widodo yang ke-{d-1961}, untung kamu mengingatkan."
+                if stemmed.find('kamu tahu sekarang adalah ulang tahun pak jokowi') != -1:
+                    respond = f"oh ya, sekarang adalah ulang tahun bapak presiden joko widodo yang ke-{datetime.now().year-1961}, untung kamu mengingatkan."
             elif tokenized[0] == question_words[2]:
                 if tokenized[1] == 'namamu':
-                    respond = f'Nama saya adalah {myname} versi {ver} senggol dong!'
+                    respond = f'Nama saya adalah {myname} versi {ver}'
                 elif tokenized[1] == 'kamu':
-                    d = datetime.now().year
-                    respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {d-2010} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
+                    respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {datetime.now().year-2010} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
                 elif tokenized[1] == 'calon' and tokenized[2] == 'presiden':
                     URL = "https://poltracking.com/rilis-temuan-survei-nasional-poltracking-indonesia-tendensi-peta-politik-pilpres-2024/"
 
@@ -163,6 +161,10 @@ def answer_question(question:str):
                     respond = f'Suhu di smart farm saat ini adalah {temperature} derajat celcius'
                 elif tokenized[1] == 'kelembaban':
                     respond = f'Kelembaban di smart farm saat ini adalah {humidity} persen'
+                elif tokenized[1] == 'umur' and tokenized[2] == 'sekarang':
+                    respond = f'Umurku sejak aku pertama kali dibuat adalah {datetime.now().year-2022} tahun'
+                elif tokenized[1] == 'umur' and tokenized[2] == 'dean':
+                    respond = f'Umur dean sekarang adalah {datetime.now().year-2010} tahun'
 
         print(respond)
         speak(respond)
@@ -256,30 +258,48 @@ def respond(voice_data):
     global start_time, bangun, temperature
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
-            speak('Halo ' + username)
+            r = random.randint(0, 2)
+            h = datetime.now().hour
+            if r == 0:
+                speak('Halo ' + username)
+            elif r == 1:
+                speak('Hai ' + username)
+            elif r == 2:
+                if h > 18:
+                    speak('Selamat Malam ' + username)
+                elif h > 14:
+                    speak('Selamat Sore ' + username)
+                elif h > 9:
+                    speak('Selamat Siang ' + username)
+                elif h > 5:
+                    speak('Selamat Pagi ' + username)
+                else:
+                    speak('Selamat Malam ' + username)
             t1 = datetime.strptime(start_time, '%H:%M:%S')
-
             t2 = datetime.strptime(ctime().split(' ')[3], '%H:%M:%S')
-
             delta = t2 - t1
             if delta.seconds >= 420:
                 speak('Kenapa kamu baru menyapaku, aku kangen')
 
         elif there_exists(['aku baik saja', 'aku baik-baik saja', 'saya baik-baik saja']):
-
-            speak('Baguslah kalau begitu')
+            
+            r = random.randint(0, 3)
+            if r == 0:
+                speak('Baguslah kalau begitu')
+            elif r == 1:
+                speak('Baguslah')
+            elif r == 2:
+                speak('Aku senang mendengarnya')
+            elif r == 3:
+                speak('Aku senang sekali mendengarnya')
 
         elif there_exists(['bisakah anda membantu saya', 'bisakah kamu membantu saya', 'bisakah kamu menolong saya', 'bisakah anda menolong saya', 'bantu saya', 'tolong saya']):
 
             speak(f'Tentu saja aku bisa menolongmu')
 
         elif there_exists(['jam berapa sekarang', 'katakan jam berapa sekarang', 'sekarang jam berapa']):
-            time = ctime().split(' ')[3].split(':')[0:2]
-            if time[0] == '00':
-                hours = '12'
-            else:
-                hours = time[0]
-            minutes = time[1]
+            hours = datetime.now().hour
+            minutes = datetime.now().minute
             time = f'Sekarang jam {hours}.{minutes}'
             speak(time)
 

@@ -19,7 +19,6 @@ client_id = f'python-mqtt-{random.randint(0, 1000)}'
 data = ''
 lastTime = 0
 spam = False
-lastDetect = []
 _un = ""
 block = True
 dataT = ""
@@ -152,7 +151,7 @@ while True:
         if not ret:
             break
         detections = []
-        results = model(source=frame)
+        results = model(source=frame, conf=0.8)
         try:
             ser.write(b'1')
             time.sleep(0.05)
@@ -164,10 +163,7 @@ while True:
             detections.append(int(class_index[0]))
 
         if detections == [39] or detections == [40]:
-            if lastDetect == detections:
-                c = c + 1
-            elif c > 0:
-                c = c - 1
+            c = c + 1
             
             try:
                 try:
@@ -194,9 +190,10 @@ while True:
             except:
                 pass
             lastTime = time.time()
+        elif c > 0:
+            c = c - 1
         if time.time() > lastTime+24:
             break
-        lastDetect = detections
     block = True
     mqttclient.publish(topic+'/pts', 'end')
     try:
