@@ -66,10 +66,7 @@ def find_wiki(q:str):
     p = 'Aku tidak menemukan apapun'
 
     try:
-        p = wiki.page(q)
-        m = p.content.split('\n')[0]
-        p = m.split(m.split('(')[1].split(')')[0])
-        p = p[0] + p[1]
+        p = wiki.summary(q)
         return p
     except:
         return p
@@ -105,6 +102,9 @@ def answer_question(question:str):
                     pass
                 elif tokenized[1] == 'itu' and question.lower().split('apa itu ')[1] == 'bali digifest':
                     pass
+                elif tokenized[1] == 'itu':
+                    search_term = question.split('apa itu ')[1]
+                    respond = find_wiki(search_term)
             elif tokenized[0] == question_words[1]:
                 if stemmed.find('kamu tahu sekarang adalah ulang tahun pak jokowi') != -1:
                     respond = f"oh ya, sekarang adalah ulang tahun bapak presiden joko widodo yang ke-{datetime.now().year-1961}, untung kamu mengingatkan."
@@ -156,7 +156,6 @@ def answer_question(question:str):
                 elif tokenized[1] == 'status' and tokenized[2] == 'smart' and tokenized[3] == 'farm':
                     respond = f'Status smart farm saat ini adalah suhu: {temperature} derajat celcius, kelembaban: {humidity} persen, pompa {pump_status}'
             elif tokenized[0] == question_words[4]:
-                print(tokenized[1])
                 if tokenized[1] == 'suhu':
                     respond = f'Suhu di smart farm saat ini adalah {temperature} derajat celcius'
                 elif tokenized[1] == 'kelembaban':
@@ -165,8 +164,9 @@ def answer_question(question:str):
                     respond = f'Umurku sejak aku pertama kali dibuat adalah {datetime.now().year-2022} tahun'
                 elif tokenized[1] == 'umur' and tokenized[2] == 'dean':
                     respond = f'Umur dean sekarang adalah {datetime.now().year-2010} tahun'
+                else:
+                    respond = str("%.1f" % eval(question.split(question_words[4])[1].replace(' juta', '000000'))).replace('.', ',')
 
-        print(respond)
         speak(respond)
 
 def record_audio(recognizer:sr.Recognizer, microphone:sr.Microphone):
@@ -428,10 +428,7 @@ except:
 print('Port COM yang tersedia:')
 for port in serial_ports():
     print('-', port)
-try:
-    comport = 'COM5'
-except:
-    comport = input('Masukkan Nama Port Dari Robot: ')
+comport = 'COM5'
 
 try:
     mqttclient = connect_mqtt()
@@ -446,7 +443,9 @@ try:
 
     print('Badan Robot, Terhubung')
 except:
-    print('Tidak Bisa Terhubung Ke Badan Robot, Sebaiknya hubungkan untuk pengalaman yang lebih baik')
+    comport = input('Masukkan Nama Port Dari Robot: ')
+    port = serial.Serial(port=comport, baudrate=9600)
+    print('Badan Robot, Terhubung')
 
 while (1):
     try:
