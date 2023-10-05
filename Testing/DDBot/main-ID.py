@@ -284,11 +284,19 @@ def respond(voice_data:str):
                 speak('Kenapa kamu baru menyapaku, aku kangen')
 
         if there_exists(['hai robot ']):
-            if voice_data.find('hai robot coba hitung') != -1:
-                print(voice_data.split('hai robot coba hitung')[1])
+            if voice_data.find('hai robot coba berhitung dari') != -1:
+                s = int(voice_data.split('hai robot coba berhitung dari ')[1].split(' sampai ')[0])
+                e = int(voice_data.split('hai robot coba berhitung dari ')[1].split(' sampai ')[1])+1
+
+                if s < e:
+                    for i in range(s, e):
+                        try:
+                            speak(str(i))
+                        except:
+                            pass
 
         elif there_exists(['aku baik saja', 'aku baik-baik saja', 'saya baik-baik saja']):
-            
+
             r = random.randint(0, 3)
             if r == 0:
                 speak('Baguslah kalau begitu')
@@ -450,8 +458,11 @@ try:
     print('Badan Robot, Terhubung')
 except:
     comport = input('Masukkan Nama Port Dari Robot: ')
-    port = serial.Serial(port=comport, baudrate=9600)
-    print('Badan Robot, Terhubung')
+    try:
+        port = serial.Serial(port=comport, baudrate=9600)
+        print('Badan Robot, Terhubung')
+    except:
+        print('Badan Robot, Tidak Terhubung')
 
 while (1):
     try:
@@ -465,7 +476,8 @@ while (1):
             }
 
         if res['error'] == None and res['transcription'] != None:
-            respond(res['transcription'].lower)
+            print(res['transcription'])
+            respond(res['transcription'].lower())
         else:
             print(res['error'])
     except:
