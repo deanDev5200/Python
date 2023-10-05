@@ -1,5 +1,5 @@
 test = False
-import glob, speech_recognition as sr, sys, random, requests, webbrowser, json, pyautogui, AppOpener, serial, wikipedia as wiki, os
+import glob, speech_recognition as sr, sys, random, requests, webbrowser, json, pyautogui, AppOpener, serial, wikipediaapi, os
 from lxml import etree
 from gtts import gTTS
 from bs4 import BeautifulSoup
@@ -11,6 +11,8 @@ from time import sleep
 from datetime import datetime
 from time import ctime
 from paho.mqtt import client as mqtt_client
+
+wiki_wiki = wikipediaapi.Wikipedia('DDBot (deanhebat.id@gmail.com)', 'id')
 start_time = '00:00:00'
 broker = 'broker.emqx.io'
 mqttport = 1883
@@ -24,7 +26,6 @@ pump_status = ''
 bangun = False
 x = open('Testing/DDbot/const.json').read()
 x = json.loads(x)
-wiki.set_lang('id')
 question_words = x['question_words']
 API_key = x['weather_key']
 city_id = x['city']
@@ -66,7 +67,8 @@ def find_wiki(q:str):
     p = 'Aku tidak menemukan apapun'
 
     try:
-        p = wiki.summary(q)
+        page_py = wiki_wiki.page('Joko Widodo')
+        p = page_py.summary
         return p
     except:
         return p
@@ -253,11 +255,11 @@ def earthquake():
 
     return f"Gempa terkini terjadi tanggal {datt['date'][0]} pada {datt['date'][1][0:5]} Waktu Indonesia Barat. Dengan magnitudo {datt['magnitude']} skala richter. Di kedalaman {datt['depth']}. {datt['loc']}"
 
-def respond(voice_data):
+def respond(voice_data:str):
     print(voice_data)
     global start_time, bangun, temperature
     if bangun:
-        if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot bangun']):
+        if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot']):
             r = random.randint(0, 2)
             h = datetime.now().hour
             if r == 0:
@@ -280,6 +282,10 @@ def respond(voice_data):
             delta = t2 - t1
             if delta.seconds >= 420:
                 speak('Kenapa kamu baru menyapaku, aku kangen')
+
+        if there_exists(['hai robot ']):
+            if voice_data.find('hai robot coba hitung') != -1:
+                print(voice_data.split('hai robot coba hitung')[1])
 
         elif there_exists(['aku baik saja', 'aku baik-baik saja', 'saya baik-baik saja']):
             
@@ -459,7 +465,7 @@ while (1):
             }
 
         if res['error'] == None and res['transcription'] != None:
-            respond(res['transcription'])
+            respond(res['transcription'].lower)
         else:
             print(res['error'])
     except:
