@@ -1,16 +1,17 @@
-import wikipediaapi
+import requests
+from lxml import etree
+from bs4 import BeautifulSoup
 
-wiki_wiki = wikipediaapi.Wikipedia('DDBot (deanhebat.id@gmail.com)', 'id')
+URL = "https://www.kompas.com/tren"
 
-page_py = wiki_wiki.page('Joko Widodo')
-print("Page - Exists: %s" % page_py.exists())
-# Page - Exists: True
+HEADERS = ({'User-Agent':
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
+            (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',\
+            'Accept-Language': 'en-US, en;q=0.5'})
 
-page_missing = wiki_wiki.page('NonExistingPageWithStrangeName')
-print("Page - Exists: %s" %     page_missing.exists())
+webpage = requests.get(URL, headers=HEADERS)
+soup = BeautifulSoup(webpage.content, "html.parser")
+dom = etree.HTML(str(soup)) # type: ignore
+respond = dom.xpath('/html/body/div[1]/div[1]/div[4]/div[3]/div[1]/div[1]/div[2]/div/div[3]/a/div[1]/img')[0]
 
-print("Page - Title: %s" % page_py.title)
-# Page - Title: Python (programming language)
-
-print("Page - Summary: %s" % page_py.summary)
-# Page - Summary: Python is a widely used high-level programming language for
+print(respond.items()[0][1])

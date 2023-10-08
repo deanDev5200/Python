@@ -1,8 +1,8 @@
 test = False
 import glob, speech_recognition as sr, sys, random, requests, webbrowser, json, pyautogui, AppOpener, serial, wikipediaapi, os
 from lxml import etree
-from gtts import gTTS
 from bs4 import BeautifulSoup
+from gtts import gTTS
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from pydub import AudioSegment
@@ -23,6 +23,7 @@ temperature = ''
 humidity = ''
 pump_status = ''
 #-----------------------------------------------------#
+
 bangun = False
 x = open('Testing/DDbot/const.json').read()
 x = json.loads(x)
@@ -98,15 +99,24 @@ def answer_question(question:str):
                         respond = f'Aku sangat baik terimakasih telah bertanya, Oh ya {username} hari ini ulang tahunmu. Selamat ulang tahun ya'
                     else:
                         respond = f'Aku sangat baik terimakasih telah bertanya, bagaimana denganmu {username}'
-                elif question.lower().split('apa ')[1] == 'tema bali digifest':
-                    pass
-                elif question.lower().split('apa ')[1] == 'tujuan bali digifest':
-                    pass
-                elif tokenized[1] == 'itu' and question.lower().split('apa itu ')[1] == 'bali digifest':
-                    pass
-                elif tokenized[1] == 'itu':
-                    search_term = question.split('apa itu ')[1]
-                    respond = find_wiki(search_term)
+                elif stemmed.find('berita yang sedang tren'):
+                    URL = "https://www.kompas.com/tren"
+
+                    HEADERS = ({'User-Agent':
+                                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
+                                (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',\
+                                'Accept-Language': 'en-US, en;q=0.5'})
+
+                    webpage = requests.get(URL, headers=HEADERS)
+                    soup = BeautifulSoup(webpage.content, "html.parser")
+                    dom = etree.HTML(str(soup)) # type: ignore
+                    n1 = dom.xpath('/html/body/div[1]/div[1]/div[4]/div[3]/div[1]/div[1]/div[1]/a/div[1]/img')[0].items()[0][1].replace(':', ' Berkata')
+                    n2 = dom.xpath('/html/body/div[1]/div[1]/div[4]/div[3]/div[1]/div[1]/div[2]/div/div[1]/a/div[1]/img')[0].items()[0][1].replace(':', ' Berkata')
+                    n3 = dom.xpath('/html/body/div[1]/div[1]/div[4]/div[3]/div[1]/div[1]/div[2]/div/div[2]/a/div[1]/img')[0].items()[0][1].replace(':', ' Berkata')
+                    n4 = dom.xpath('/html/body/div[1]/div[1]/div[4]/div[3]/div[1]/div[1]/div[2]/div/div[3]/a/div[1]/img')[0].items()[0][1].replace(':', ' Berkata')
+
+                    respond = f'Judul berita yang sedang tren saat ini adalah: {n1}. {n2}. {n3}. {n4}.'
+                    print(respond)
             elif tokenized[0] == question_words[1]:
                 if stemmed.find('kamu tahu sekarang adalah ulang tahun pak jokowi') != -1:
                     respond = f"oh ya, sekarang adalah ulang tahun bapak presiden joko widodo yang ke-{datetime.now().year-1961}, untung kamu mengingatkan."
@@ -167,7 +177,7 @@ def answer_question(question:str):
                 elif tokenized[1] == 'umur' and tokenized[2] == 'dean':
                     respond = f'Umur dean sekarang adalah {datetime.now().year-2010} tahun'
                 else:
-                    respond = str("%.1f" % eval(question.split(question_words[4])[1].replace(' juta', '000000'))).replace('.', ',')
+                    respond = str("%.1f" % eval(question.split(question_words[4])[1].replace(' juta', '000000'))).replace('.', ',').replace(',0', '')
 
         speak(respond)
 
@@ -320,11 +330,11 @@ def respond(voice_data:str):
         elif there_exists(['ucapkan', 'kalau begitu ucapkan']):
             word = voice_data.split('ucapkan')[-1]
             if word.find('selamat hari raya nyepi') != -1:
-                speak(word + 'tahun saka 1945, semoga bahagia')
+                speak(word + f'tahun saka {datetime.now().year-78}, semoga bahagia')
             if word.find('sesuatu untuk bapak presiden') != -1:
                 speak('selamat ulang tahun pak presiden jokowi, semoga panjang umur dan sehat selalu')
             elif word.find('selamat ulang tahun untuk kota singaraja') != -1:
-                speak(word + ' yang ke 419, kuat dan bangkit bersama')
+                speak(word + f' yang ke {datetime.now().year-1604}, kuat dan bangkit bersama')
             else:
                 speak(word)
 
