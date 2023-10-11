@@ -1,5 +1,5 @@
 test = False
-import glob, speech_recognition as sr, sys, random, requests, webbrowser, json, pyautogui, AppOpener, serial, wikipediaapi, os
+import glob, speech_recognition as sr, sys, random, requests, webbrowser, json, AppOpener, serial, wikipediaapi, os, subprocess, pygame
 from lxml import etree
 from bs4 import BeautifulSoup
 from gtts import gTTS
@@ -12,12 +12,16 @@ from datetime import datetime
 from time import ctime
 from paho.mqtt import client as mqtt_client
 
+pygame.mixer.init()
+pygame.mixer.music.set_volume(0.2)
 wiki_wiki = wikipediaapi.Wikipedia('DDBot (deanhebat.id@gmail.com)', 'id')
 start_time = '00:00:00'
 broker = 'broker.emqx.io'
 mqttport = 1883
+ccnum = -1
 topic = 'deanpop/lampujarakjauh/01'
 topic2 = 'DEAN_DEV/aplikasiSmartFarm/0/set'
+fn = 'nomusicplaying'
 client_id = f'python-mqtt-{random.randint(1000, 9999)}'
 temperature = ''
 humidity = ''
@@ -27,6 +31,10 @@ pump_status = ''
 bangun = False
 x = open('Testing/DDbot/const.json').read()
 x = json.loads(x)
+
+cc = open('Testing/DDbot/cecimpedan.json').read()
+cc = json.loads(cc)["0"]
+
 question_words = x['question_words']
 API_key = x['weather_key']
 city_id = x['city']
@@ -68,7 +76,7 @@ def find_wiki(q:str):
     p = 'Aku tidak menemukan apapun'
 
     try:
-        page_py = wiki_wiki.page('Joko Widodo')
+        page_py = wiki_wiki.page(q)
         p = page_py.summary
         return p
     except:
@@ -267,8 +275,8 @@ def earthquake():
 
 def respond(voice_data:str):
     print(voice_data)
-    global start_time, bangun, temperature
-    if bangun:
+    global start_time, bangun, temperature, fn, ccnum
+    if bangun and ccnum == -1:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot']):
             r = random.randint(0, 2)
             h = datetime.now().hour
@@ -293,6 +301,11 @@ def respond(voice_data:str):
             if delta.seconds >= 420:
                 speak('Kenapa kamu baru menyapaku, aku kangen')
 
+        if there_exists(['oke main cecimpedan yuk']) and ccnum == -1:
+            speak('ok')
+            ccnum =  random.randint(0, len(cc)-1)
+            speak(f"{cc[ccnum]['soal']}")
+
         if there_exists(['hai robot ']):
             if voice_data.find('hai robot coba berhitung dari') != -1:
                 s = int(voice_data.split('hai robot coba berhitung dari ')[1].split(' sampai ')[0])
@@ -304,6 +317,8 @@ def respond(voice_data:str):
                             speak(str(i))
                         except:
                             pass
+            elif voice_data.find('hai robot ayo kita bermain') != -1:
+                speak('ok')
 
         elif there_exists(['aku baik saja', 'aku baik-baik saja', 'saya baik-baik saja']):
 
@@ -343,21 +358,37 @@ def respond(voice_data:str):
             if search_term != '':
 
                 try:
-                    speak(f'baiklah, memutar lagu {search_term}')
-                    AppOpener.open('spotify')
-                    while pyautogui.pixel(124, 150) != (179, 179, 179):
-                        pass
-                    sleep(0.5)
-                    pyautogui.click(124,150)
-                    sleep(0.5)
-                    pyautogui.write(search_term, 0.05)
-                    while pyautogui.pixel(1095, 312) == (18, 18, 18):
-                        pass
-                    pyautogui.moveTo(1095, 312)
-                    sleep(0.6)
-                    pyautogui.click(1095, 312) 
+                    speak(f'ok, tunggu sebentar!')
+                    result = subprocess.run(['spotdl', f"'{search_term}'", "--bitrate", '48k', '--user-auth'], stdout=subprocess.PIPE)
+                    fn = result.stdout.decode().split('"')[1].split('-')[1].lstrip()
+                    fn = f'{fn}.mp3'
+                    speak(f'memutar lagu {search_term}')
+                    pygame.mixer.music.load(fn)
+                    pygame.mixer.music.play()
                 except:
                     pass
+                
+        elif there_exists(['putar musik']):
+            search_term = voice_data.lower().split('putar musik ')[1]
+            if search_term != '':
+
+                try:
+                    speak(f'ok, tunggu sebentar!')
+                    result = subprocess.run(['spotdl', f"'{search_term}'", "--bitrate", '48k', '--user-auth'], stdout=subprocess.PIPE)
+                    fn = result.stdout.decode().split('"')[1].split('-')[1].lstrip()
+                    fn = f'{fn}.mp3'
+                    speak(f'memutar lagu {search_term}')
+                    pygame.mixer.music.load(fn)
+                    pygame.mixer.music.play()
+                except:
+                    pass
+
+        elif there_exists(['matikan lagu', 'matikan musik']):
+            if fn != 'nomusicplaying':
+                pygame.mixer.music.stop()
+                pygame.mixer.music.unload()
+                os.system(f'del /f "{fn}"')
+                fn = 'nomusicplaying'
 
         elif there_exists(['hadiahnya mana', 'mana hadiahnya']):
             speak(f'baiklah {username}')
@@ -406,7 +437,7 @@ def respond(voice_data:str):
         else:
             answer_question(voice_data)
 
-    elif there_exists(['robot bangun', 'hai robot bangun', 'hai robot aktifkan']):
+    elif there_exists(['robot bangun', 'hai robot bangun', 'hai robot aktifkan']) and not bangun:
         start_time = ctime().split(' ')[3]
         bangun = True
         try:
@@ -414,6 +445,14 @@ def respond(voice_data:str):
         except:
             pass
         speak('Halo' + username)
+    
+    elif ccnum != -1:
+        if there_exists([cc[ccnum]['jawab']]):
+            speak('Duweg gati nok')
+            ccnum =  random.randint(0, len(cc)-1)
+            speak(f"{cc[ccnum]['soal']}")
+        else:
+            speak('Beh belog gati')
 
 def serial_ports():
     ''' Lists serial port names
