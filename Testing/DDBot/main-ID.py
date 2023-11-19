@@ -140,7 +140,7 @@ def answer_question(question:str):
                         city = True
                     else:
                         try:
-                            city = question.split('bagaimana cuaca di ')[1]
+                                city = question.split('bagaimana cuaca di ')[1]
                         except:
                             city = city_id
                         weather_data = requests.get(f'http://api.openweathermap.org/data/2.5/weather?appid={API_key}&q={city}&lang=id').json()
@@ -167,7 +167,7 @@ def answer_question(question:str):
                 elif tokenized[1] == 'umur' and tokenized[2] == 'dean':
                     respond = f'Umur dean sekarang adalah {datetime.now().year-2010} tahun'
                 else:
-                    respond = str("%.1f" % eval(question.split(question_words[4])[1].replace(' juta', '000000'))).replace('.', ',')
+                    respond = str("%.1f" % eval(question.split(question_words[4])[1].replace(' juta', '000000'))).replace('.', ',').replace(',0', '')
 
         speak(respond)
 
@@ -256,7 +256,6 @@ def earthquake():
     return f"Gempa terkini terjadi tanggal {datt['date'][0]} pada {datt['date'][1][0:5]} Waktu Indonesia Barat. Dengan magnitudo {datt['magnitude']} skala richter. Di kedalaman {datt['depth']}. {datt['loc']}"
 
 def respond(voice_data:str):
-    print(voice_data)
     global start_time, bangun, temperature
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot']):
