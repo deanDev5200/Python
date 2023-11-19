@@ -1,8 +1,8 @@
 test = False
-import glob, speech_recognition as sr, sys, random, requests, webbrowser, json, pyautogui, AppOpener, serial, wikipediaapi, os
+import glob, speech_recognition as sr, sys, random, requests, webbrowser, json, AppOpener, serial, wikipediaapi, os, subprocess, pygame
 from lxml import etree
-from gtts import gTTS
 from bs4 import BeautifulSoup
+from gtts import gTTS
 from nltk.tokenize import word_tokenize
 from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from pydub import AudioSegment
@@ -12,20 +12,29 @@ from datetime import datetime
 from time import ctime
 from paho.mqtt import client as mqtt_client
 
+pygame.mixer.init()
+pygame.mixer.music.set_volume(0.2)
 wiki_wiki = wikipediaapi.Wikipedia('DDBot (deanhebat.id@gmail.com)', 'id')
 start_time = '00:00:00'
 broker = 'broker.emqx.io'
 mqttport = 1883
+ccnum = -1
 topic = 'deanpop/lampujarakjauh/01'
 topic2 = 'DEAN_DEV/aplikasiSmartFarm/0/set'
+fn = 'nomusicplaying'
 client_id = f'python-mqtt-{random.randint(1000, 9999)}'
 temperature = ''
 humidity = ''
 pump_status = ''
 #-----------------------------------------------------#
+
 bangun = False
 x = open('Testing/DDbot/const.json').read()
 x = json.loads(x)
+
+cc = open('Testing/DDbot/cecimpedan.json').read()
+cc = json.loads(cc)["0"]
+
 question_words = x['question_words']
 API_key = x['weather_key']
 city_id = x['city']
@@ -67,7 +76,7 @@ def find_wiki(q:str):
     p = 'Aku tidak menemukan apapun'
 
     try:
-        page_py = wiki_wiki.page('Joko Widodo')
+        page_py = wiki_wiki.page(q)
         p = page_py.summary
         return p
     except:
@@ -98,15 +107,24 @@ def answer_question(question:str):
                         respond = f'Aku sangat baik terimakasih telah bertanya, Oh ya {username} hari ini ulang tahunmu. Selamat ulang tahun ya'
                     else:
                         respond = f'Aku sangat baik terimakasih telah bertanya, bagaimana denganmu {username}'
-                elif question.lower().split('apa ')[1] == 'tema bali digifest':
-                    pass
-                elif question.lower().split('apa ')[1] == 'tujuan bali digifest':
-                    pass
-                elif tokenized[1] == 'itu' and question.lower().split('apa itu ')[1] == 'bali digifest':
-                    pass
-                elif tokenized[1] == 'itu':
-                    search_term = question.split('apa itu ')[1]
-                    respond = find_wiki(search_term)
+                elif stemmed.find('berita yang sedang tren'):
+                    URL = "https://www.kompas.com/tren"
+
+                    HEADERS = ({'User-Agent':
+                                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
+                                 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36',\
+                                'Accept-Language': 'en-US, en;q=0.5'})
+
+                    webpage = requests.get(URL, headers=HEADERS)
+                    soup = BeautifulSoup(webpage.content, "html.parser")
+                    dom = etree.HTML(str(soup)) # type: ignore
+                    n1 = dom.xpath('/html/body/div[1]/div[1]/div[4]/div[3]/div[1]/div[1]/div[1]/a/div[1]/img')[0].items()[0][1].replace(':', ' Berkata')
+                    n2 = dom.xpath('/html/body/div[1]/div[1]/div[4]/div[3]/div[1]/div[1]/div[2]/div/div[1]/a/div[1]/img')[0].items()[0][1].replace(':', ' Berkata')
+                    n3 = dom.xpath('/html/body/div[1]/div[1]/div[4]/div[3]/div[1]/div[1]/div[2]/div/div[2]/a/div[1]/img')[0].items()[0][1].replace(':', ' Berkata')
+                    n4 = dom.xpath('/html/body/div[1]/div[1]/div[4]/div[3]/div[1]/div[1]/div[2]/div/div[3]/a/div[1]/img')[0].items()[0][1].replace(':', ' Berkata')
+
+                    respond = f'Judul berita yang sedang tren saat ini adalah: {n1}. {n2}. {n3}. {n4}.'
+                    print(respond)
             elif tokenized[0] == question_words[1]:
                 if stemmed.find('kamu tahu sekarang adalah ulang tahun pak jokowi') != -1:
                     respond = f"oh ya, sekarang adalah ulang tahun bapak presiden joko widodo yang ke-{datetime.now().year-1961}, untung kamu mengingatkan."
@@ -119,8 +137,8 @@ def answer_question(question:str):
                     URL = "https://poltracking.com/rilis-temuan-survei-nasional-poltracking-indonesia-tendensi-peta-politik-pilpres-2024/"
 
                     HEADERS = ({'User-Agent':
-                                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
-                                (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36',\
+                                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
+                                 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36',\
                                 'Accept-Language': 'en-US, en;q=0.5'})
 
                     webpage = requests.get(URL, headers=HEADERS)
@@ -256,6 +274,7 @@ def earthquake():
     return f"Gempa terkini terjadi tanggal {datt['date'][0]} pada {datt['date'][1][0:5]} Waktu Indonesia Barat. Dengan magnitudo {datt['magnitude']} skala richter. Di kedalaman {datt['depth']}. {datt['loc']}"
 
 def respond(voice_data:str):
+    print(voice_data)
     global start_time, bangun, temperature
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot']):
@@ -282,6 +301,11 @@ def respond(voice_data:str):
             if delta.seconds >= 420:
                 speak('Kenapa kamu baru menyapaku, aku kangen')
 
+        if there_exists(['oke main cecimpedan yuk']) and ccnum == -1:
+            speak('ok')
+            ccnum =  random.randint(0, len(cc)-1)
+            speak(f"{cc[ccnum]['soal']}")
+
         if there_exists(['hai robot ']):
             if voice_data.find('hai robot coba berhitung dari') != -1:
                 s = int(voice_data.split('hai robot coba berhitung dari ')[1].split(' sampai ')[0])
@@ -293,6 +317,8 @@ def respond(voice_data:str):
                             speak(str(i))
                         except:
                             pass
+            elif voice_data.find('hai robot ayo kita bermain') != -1:
+                speak('ok')
 
         elif there_exists(['aku baik saja', 'aku baik-baik saja', 'saya baik-baik saja']):
 
@@ -319,11 +345,11 @@ def respond(voice_data:str):
         elif there_exists(['ucapkan', 'kalau begitu ucapkan']):
             word = voice_data.split('ucapkan')[-1]
             if word.find('selamat hari raya nyepi') != -1:
-                speak(word + 'tahun saka 1945, semoga bahagia')
+                speak(word + f'tahun saka {datetime.now().year-78}, semoga bahagia')
             if word.find('sesuatu untuk bapak presiden') != -1:
                 speak('selamat ulang tahun pak presiden jokowi, semoga panjang umur dan sehat selalu')
             elif word.find('selamat ulang tahun untuk kota singaraja') != -1:
-                speak(word + ' yang ke 419, kuat dan bangkit bersama')
+                speak(word + f' yang ke {datetime.now().year-1604}, kuat dan bangkit bersama')
             else:
                 speak(word)
 
@@ -332,21 +358,37 @@ def respond(voice_data:str):
             if search_term != '':
 
                 try:
-                    speak(f'baiklah, memutar lagu {search_term}')
-                    AppOpener.open('spotify')
-                    while pyautogui.pixel(124, 150) != (179, 179, 179):
-                        pass
-                    sleep(0.5)
-                    pyautogui.click(124,150)
-                    sleep(0.5)
-                    pyautogui.write(search_term, 0.05)
-                    while pyautogui.pixel(1095, 312) == (18, 18, 18):
-                        pass
-                    pyautogui.moveTo(1095, 312)
-                    sleep(0.6)
-                    pyautogui.click(1095, 312) 
+                    speak(f'ok, tunggu sebentar!')
+                    result = subprocess.run(['spotdl', f"'{search_term}'", "--bitrate", '48k', '--user-auth'], stdout=subprocess.PIPE)
+                    fn = result.stdout.decode().split('"')[1].split('-')[1].lstrip()
+                    fn = f'{fn}.mp3'
+                    speak(f'memutar lagu {search_term}')
+                    pygame.mixer.music.load(fn)
+                    pygame.mixer.music.play()
                 except:
                     pass
+                
+        elif there_exists(['putar musik']):
+            search_term = voice_data.lower().split('putar musik ')[1]
+            if search_term != '':
+
+                try:
+                    speak(f'ok, tunggu sebentar!')
+                    result = subprocess.run(['spotdl', f"'{search_term}'", "--bitrate", '48k', '--user-auth'], stdout=subprocess.PIPE)
+                    fn = result.stdout.decode().split('"')[1].split('-')[1].lstrip()
+                    fn = f'{fn}.mp3'
+                    speak(f'memutar lagu {search_term}')
+                    pygame.mixer.music.load(fn)
+                    pygame.mixer.music.play()
+                except:
+                    pass
+
+        elif there_exists(['matikan lagu', 'matikan musik']):
+            if fn != 'nomusicplaying':
+                pygame.mixer.music.stop()
+                pygame.mixer.music.unload()
+                os.system(f'del /f "{fn}"')
+                fn = 'nomusicplaying'
 
         elif there_exists(['hadiahnya mana', 'mana hadiahnya']):
             speak(f'baiklah {username}')
@@ -395,7 +437,7 @@ def respond(voice_data:str):
         else:
             answer_question(voice_data)
 
-    elif there_exists(['robot bangun', 'hai robot bangun', 'hai robot aktifkan']):
+    elif there_exists(['robot bangun', 'hai robot bangun', 'hai robot aktifkan']) and not bangun:
         start_time = ctime().split(' ')[3]
         bangun = True
         try:
@@ -403,6 +445,14 @@ def respond(voice_data:str):
         except:
             pass
         speak('Halo' + username)
+    
+    elif ccnum != -1:
+        if there_exists([cc[ccnum]['jawab']]):
+            speak('Duweg gati nok')
+            ccnum =  random.randint(0, len(cc)-1)
+            speak(f"{cc[ccnum]['soal']}")
+        else:
+            speak('Beh belog gati')
 
 def serial_ports():
     ''' Lists serial port names
