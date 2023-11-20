@@ -2,12 +2,12 @@ import cv2
 import numpy as np
 
 # read input image
-bg = cv2.imread('bgp.jpg')
+bg = cv2.imread('bgnp.jpg')
 
 cap = cv2.VideoCapture(0)
 
 # define range of blue color in HSV
-lower_blue = np.array([100,20,80])
+lower_blue = np.array([100,20,30])
 upper_blue = np.array([130,255,255])
 
 while True:
@@ -23,7 +23,7 @@ while True:
     result = cv2.addWeighted(bgtmp, 1, result, 1, 0)
 
     cv2.imshow('Masked Image',result)
-    cv2.imshow('Mask',mask)
+    #cv2.imshow('Mask',mask)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 cv2.destroyAllWindows()
