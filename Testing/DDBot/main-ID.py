@@ -1,5 +1,5 @@
 test = False
-import glob, speech_recognition as sr, sys, random, requests, webbrowser, json, AppOpener, serial, wikipediaapi, os, subprocess, pygame
+import glob, speech_recognition as sr, sys, random, requests, webbrowser, json, AppOpener, serial, wikipediaapi, os, subprocess, pygame, datetime
 from lxml import etree
 from bs4 import BeautifulSoup
 from gtts import gTTS
@@ -8,7 +8,6 @@ from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 from pydub import AudioSegment
 from pydub.playback import play
 from time import sleep
-from datetime import datetime
 from time import ctime
 from paho.mqtt import client as mqtt_client
 
@@ -127,12 +126,12 @@ def answer_question(question:str):
                     print(respond)
             elif tokenized[0] == question_words[1]:
                 if stemmed.find('kamu tahu sekarang adalah ulang tahun pak jokowi') != -1:
-                    respond = f"oh ya, sekarang adalah ulang tahun bapak presiden joko widodo yang ke-{datetime.now().year-1961}, untung kamu mengingatkan."
+                    respond = f"oh ya, sekarang adalah ulang tahun bapak presiden joko widodo yang ke-{datetime.datetime.now().year-1961}, untung kamu mengingatkan."
             elif tokenized[0] == question_words[2]:
                 if tokenized[1] == 'namamu':
                     respond = f'Nama saya adalah {myname} versi {ver}'
                 elif tokenized[1] == 'kamu':
-                    respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {datetime.now().year-2010} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
+                    respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {datetime.datetime.now().year-2010} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
                 elif tokenized[1] == 'calon' and tokenized[2] == 'presiden':
                     respond = "Hasil Survei Capres-Cawapres Usai Penetapan Nomor Urut Peserta Pilpres 2024 adalah sebagai berikut. Prabowo-Gibran mendapatkan 40,2% suara. Ganjar-Mahfud menyusul dengan 30,1% suara, kemudian Anies-Imin memperoleh 24,4% suara. Sementara itu, 5,3% responden masih tidak tahu atau tidak menjawab."
                 else:
@@ -171,9 +170,9 @@ def answer_question(question:str):
                 elif tokenized[1] == 'kelembaban':
                     respond = f'Kelembaban di smart farm saat ini adalah {humidity} persen'
                 elif tokenized[1] == 'umur' and tokenized[2] == 'sekarang':
-                    respond = f'Umurku sejak aku pertama kali dibuat adalah {datetime.now().year-2022} tahun'
+                    respond = f'Umurku sejak aku pertama kali dibuat adalah {datetime.datetime.now().year-2022} tahun'
                 elif tokenized[1] == 'umur' and tokenized[2] == 'dean':
-                    respond = f'Umur dean sekarang adalah {datetime.now().year-2010} tahun'
+                    respond = f'Umur dean sekarang adalah {datetime.datetime.now().year-2010} tahun'
                 else:
                     respond = str("%.1f" % eval(question.split(question_words[4])[1].replace(' juta', '000000'))).replace('.', ',').replace(',0', '')
 
@@ -269,7 +268,7 @@ def respond(voice_data:str):
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot']):
             r = random.randint(0, 2)
-            h = datetime.now().hour
+            h = datetime.datetime.now().hour
             if r == 0:
                 speak('Halo ' + username)
             elif r == 1:
@@ -285,8 +284,8 @@ def respond(voice_data:str):
                     speak('Selamat Pagi ' + username)
                 else:
                     speak('Selamat Malam ' + username)
-            t1 = datetime.strptime(start_time, '%H:%M:%S')
-            t2 = datetime.strptime(ctime().split(' ')[3], '%H:%M:%S')
+            t1 = datetime.datetime.strptime(start_time, '%H:%M:%S')
+            t2 = datetime.datetime.strptime(ctime().split(' ')[3], '%H:%M:%S')
             delta = t2 - t1
             if delta.seconds >= 420:
                 speak('Kenapa kamu baru menyapaku, aku kangen')
@@ -327,19 +326,23 @@ def respond(voice_data:str):
             speak(f'Tentu saja aku bisa menolongmu')
 
         elif there_exists(['jam berapa sekarang', 'katakan jam berapa sekarang', 'sekarang jam berapa']):
-            hours = datetime.now().hour
-            minutes = datetime.now().minute
+            hours = datetime.datetime.now().hour
+            minutes = datetime.datetime.now().minute
             time = f'Sekarang {hours}:{minutes}'
             speak(time)
+
+        elif there_exists(['tanggal berapa sekarang', 'katakan tanggal berapa sekarang', 'sekarang tanggal berapa']):
+            date = datetime.date.today().strftime("%d/%m/%Y")
+            speak(f'Sekarang {date}')
 
         elif there_exists(['ucapkan', 'kalau begitu ucapkan']):
             word = voice_data.split('ucapkan')[-1]
             if word.find('selamat hari raya nyepi') != -1:
-                speak(word + f'tahun saka {datetime.now().year-78}, semoga bahagia')
+                speak(word + f'tahun saka {datetime.datetime.now().year-78}, semoga bahagia')
             if word.find('sesuatu untuk bapak presiden') != -1:
                 speak('selamat ulang tahun pak presiden jokowi, semoga panjang umur dan sehat selalu')
             elif word.find('selamat ulang tahun untuk kota singaraja') != -1:
-                speak(word + f' yang ke {datetime.now().year-1604}, kuat dan bangkit bersama')
+                speak(word + f' yang ke {datetime.datetime.now().year-1604}, kuat dan bangkit bersama')
             else:
                 speak(word)
 

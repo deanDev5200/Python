@@ -1,1 +1,3 @@
-print("Hasil Survei Capres-Cawapres Usai Penetapan Nomor Urut Peserta Pilpres 2024 adalah sebagai berikut. Prabowo-Gibran mendapatkan 40,2% suara. Ganjar-Mahfud menyusul dengan 30,1% suara, kemudian Anies-Imin memperoleh 24,4% suara. Sementara itu, 5,3% responden masih tidak tahu atau tidak menjawab.")
+from datetime import date
+
+print(date.today().strftime("%d/%m/%Y"))
