@@ -29,7 +29,7 @@ model = YOLO("yolov8m.pt")
 mqttclient = connect_mqtt()
 mqttclient.loop_start()
 try:
-    ser = serial.Serial('COM6', 9600)
+    ser = serial.Serial('COM3', 9600)
 except:
     pass
 cap = cv2.VideoCapture(2)

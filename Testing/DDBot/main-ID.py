@@ -134,17 +134,7 @@ def answer_question(question:str):
                 elif tokenized[1] == 'kamu':
                     respond = f'Namaku {myname} versi {ver}. Aku dibuat oleh seorang anak bernama Dean Putra, Sekarang umurnya {datetime.now().year-2010} Tahun. Dia sangat suka programming, Dia berasal dari Buleleng, Bali'
                 elif tokenized[1] == 'calon' and tokenized[2] == 'presiden':
-                    URL = "https://poltracking.com/rilis-temuan-survei-nasional-poltracking-indonesia-tendensi-peta-politik-pilpres-2024/"
-
-                    HEADERS = ({'User-Agent':
-                                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
-                                 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36',\
-                                'Accept-Language': 'en-US, en;q=0.5'})
-
-                    webpage = requests.get(URL, headers=HEADERS)
-                    soup = BeautifulSoup(webpage.content, "html.parser")
-                    dom = etree.HTML(str(soup)) # type: ignore
-                    respond = dom.xpath('//*[@id="post-29188"]/div/div[3]/div[1]/p[2]/text()[2]')[0]
+                    respond = "Hasil Survei Capres-Cawapres Usai Penetapan Nomor Urut Peserta Pilpres 2024 adalah sebagai berikut. Prabowo-Gibran mendapatkan 40,2% suara. Ganjar-Mahfud menyusul dengan 30,1% suara, kemudian Anies-Imin memperoleh 24,4% suara. Sementara itu, 5,3% responden masih tidak tahu atau tidak menjawab."
                 else:
                     search_term = question.split('siapa ')[1]
                     print(search_term)
@@ -339,7 +329,7 @@ def respond(voice_data:str):
         elif there_exists(['jam berapa sekarang', 'katakan jam berapa sekarang', 'sekarang jam berapa']):
             hours = datetime.now().hour
             minutes = datetime.now().minute
-            time = f'Sekarang jam {hours}.{minutes}'
+            time = f'Sekarang {hours}:{minutes}'
             speak(time)
 
         elif there_exists(['ucapkan', 'kalau begitu ucapkan']):
