@@ -45,6 +45,8 @@ ver = x['version']
 r = sr.Recognizer()
 mic = sr.Microphone()
 
+pygame.mixer.music.set_volume(0.5)
+
 def connect_mqtt():
     client = mqtt_client.Client(client_id)
 
@@ -379,11 +381,10 @@ def respond(voice_data:str):
                     pass
 
         elif there_exists(['matikan lagu', 'matikan musik']):
-            if fn != 'nomusicplaying':
-                pygame.mixer.music.stop()
-                pygame.mixer.music.unload()
-                os.system(f'del /f "{fn}"')
-                fn = 'nomusicplaying'
+            pygame.mixer.music.stop()
+            pygame.mixer.music.unload()
+            os.system(f'del /f "{fn}"')
+            fn = 'nomusicplaying'
 
         elif there_exists(['hadiahnya mana', 'mana hadiahnya']):
             speak(f'baiklah {username}')
