@@ -264,7 +264,7 @@ def earthquake():
     datt['depth'] = depth
     datt['loc'] = loc
 
-    return f"Gempa terkini terjadi tanggal {datt['date'][0]} pada {datt['date'][1][0:5]} Waktu Indonesia Barat. Dengan magnitudo {datt['magnitude']} skala richter. Di kedalaman {datt['depth']}. {datt['loc']}"
+    return f"Gempa terkini terjadi tanggal {datt['date'][0]} pada {datt['date'][1][0:5].replace('.', ':')} Waktu Indonesia Barat. Dengan magnitudo {datt['magnitude']} skala richter. Di kedalaman {datt['depth']}. {datt['loc']}"
 
 def respond(voice_data:str):
     print(voice_data)
@@ -356,7 +356,7 @@ def respond(voice_data:str):
 
                 try:
                     speak(f'ok, tunggu sebentar!')
-                    result = subprocess.run(['spotdl', f"'{search_term}'", "--bitrate", '48k', '--user-auth'], stdout=subprocess.PIPE)
+                    result = subprocess.run(['spotdl', f"'{search_term}'", '--user-auth'], stdout=subprocess.PIPE)
                     fn = result.stdout.decode().split('"')[1].split('-')[1].lstrip()
                     fn = f'{fn}.mp3'
                     speak(f'memutar lagu {search_term}')
@@ -364,14 +364,14 @@ def respond(voice_data:str):
                     pygame.mixer.music.play()
                 except:
                     pass
-                
+
         elif there_exists(['putar musik']):
             search_term = voice_data.lower().split('putar musik ')[1]
             if search_term != '':
 
                 try:
                     speak(f'ok, tunggu sebentar!')
-                    result = subprocess.run(['spotdl', f"'{search_term}'", "--bitrate", '48k', '--user-auth'], stdout=subprocess.PIPE)
+                    result = subprocess.run(['spotdl', f"'{search_term}'", '--user-auth'], stdout=subprocess.PIPE)
                     fn = result.stdout.decode().split('"')[1].split('-')[1].lstrip()
                     fn = f'{fn}.mp3'
                     speak(f'memutar lagu {search_term}')
@@ -383,6 +383,7 @@ def respond(voice_data:str):
         elif there_exists(['matikan lagu', 'matikan musik']):
             pygame.mixer.music.stop()
             pygame.mixer.music.unload()
+            subprocess.run(['del', '/f', fn], stdout=subprocess.PIPE)
             os.system(f'del /f "{fn}"')
             fn = 'nomusicplaying'
 
