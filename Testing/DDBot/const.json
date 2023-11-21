@@ -4,5 +4,7 @@
     "username": "Teman",
     "myname": "D D Bot",
     "version": "2",
-    "weather_key": "7040ea904442a45d6950ba584410ce59"
+    "weather_key": "7040ea904442a45d6950ba584410ce59",
+    "b_month": "May",
+    "b_day": "12"
 }

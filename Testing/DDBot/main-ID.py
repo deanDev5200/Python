@@ -39,6 +39,8 @@ API_key = x['weather_key']
 city_id = x['city']
 username = x['username']
 myname = x['myname']
+b_month = x['b_month']
+b_day = x['b_day']
 ver = x['version']
 r = sr.Recognizer()
 mic = sr.Microphone()
@@ -102,7 +104,7 @@ def answer_question(question:str):
                 if stemmed.find('kabar') != -1:
                     mon = ctime().split(' ')[1]
                     day = ctime().split(' ')[2]
-                    if mon == 'May' and day == '12':
+                    if mon == b_month and day == b_day:
                         respond = f'Aku sangat baik terimakasih telah bertanya, Oh ya {username} hari ini ulang tahunmu. Selamat ulang tahun ya'
                     else:
                         respond = f'Aku sangat baik terimakasih telah bertanya, bagaimana denganmu {username}'
@@ -174,7 +176,7 @@ def answer_question(question:str):
                 elif tokenized[1] == 'umur' and tokenized[2] == 'dean':
                     respond = f'Umur dean sekarang adalah {datetime.datetime.now().year-2010} tahun'
                 else:
-                    respond = str("%.1f" % eval(question.split(question_words[4])[1].replace(' juta', '000000'))).replace('.', ',').replace(',0', '')
+                    respond = str("%.1f" % eval(question.split(question_words[4])[1].replace(' juta', '000000').replace('kurang', '-'))).replace('.', ',').replace(',0', '')
 
         speak(respond)
 
