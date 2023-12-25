@@ -45,7 +45,7 @@ ver = x['version']
 r = sr.Recognizer()
 mic = sr.Microphone()
 
-pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.set_volume(0.7)
 
 def connect_mqtt():
     client = mqtt_client.Client(client_id)
