@@ -8,12 +8,12 @@ video = cv2.VideoCapture(0)
 boxpos = (random.randint(200, 900), random.randint(200, 650))
 boxsize = 30
 boxcolor = (255, 0, 0)
+ccolor = (0, 0, 255)
 boxpinch = False
 tmpboxpos = boxpos
 lastfpos = (0, 0)
 posaddamount = (0, 0)
 drag = False
-score = 0
 
 targetpos1 = (10, 10)
 targetpos2 = (110, 110)
@@ -22,9 +22,10 @@ targetcolor = (0, 0, 255)
 while True:
     _, img = video.read()
     img = cv2.flip(img, 1)
-    hands, img = detector.findHands(img)
+    hands, img = detector.findHands(img, False, False)
     p1 = tuple(map(lambda i, j: i - j, tmpboxpos, (boxsize,boxsize)))
     p2 = tuple(map(lambda i, j: i + j, tmpboxpos, (boxsize,boxsize)))
+    center = (-1, -1)
 
     if hands:
         hand = hands[0]
@@ -38,7 +39,6 @@ while True:
         if center[0] < p2[0] and center[0] > p1[0] and center[1] < p2[1] and center[1] > p1[1]:
             if distance < 70 and not drag:
                 drag = True
-            cv2.circle(img, center, 10, boxcolor, 3)
 
         
         if distance < 70 and drag:
@@ -56,8 +56,15 @@ while True:
             posaddamount = tuple(map(lambda i, j: i - j, center, lastfpos))
             tmpboxpos = tuple(map(lambda i, j: i + j, boxpos, posaddamount))
             boxcolor = (0, 0, 255)
+            ccolor = (0, 255, 0)
         else:
             boxcolor = (255, 0, 0)
+            ccolor = (0, 0, 255)
+    elif boxpinch:
+        drag = False
+        boxpinch = False
+        boxpos = tmpboxpos
+        boxcolor = (255, 0, 0)
 
     if boxpos[0] < targetpos2[0] and boxpos[0] > targetpos1[0] and boxpos[1] < targetpos2[1] and boxpos[1] > targetpos1[1]:
         targetcolor = (0, 255, 0)
@@ -66,14 +73,16 @@ while True:
 
     cv2.rectangle(img, targetpos1, targetpos2, targetcolor, 5)
     cv2.rectangle(img, p1, p2, boxcolor, -1)
-    cv2.putText(img, "Score: " + str(score), (10, 710), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
+
+    if center != (-1, -1):
+        cv2.circle(img, center, 10, ccolor, 3)
+        
     cv2.imshow("Video", img)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
     
     if targetcolor == (0, 255, 0):
-        score = score + 1
         boxpos = (random.randint(200, 900), random.randint(200, 650))
         tmpboxpos = boxpos
           
