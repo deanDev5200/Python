@@ -83,7 +83,8 @@ while True:
         break
     
     if targetcolor == (0, 255, 0):
-        boxpos = (random.randint(200, 900), random.randint(200, 650))
+        while boxpos[0] < 200 or boxpos[1] < 200:
+            boxpos = (random.randint(200, 900), random.randint(200, 650))
         tmpboxpos = boxpos
           
 video.release()
