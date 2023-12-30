@@ -59,13 +59,11 @@ while True:
     hands, img = detector.findHands(img, draw=True, flipType=False)
 
     img = overlayPNG(img, drumImg)
-    #img = cv2.circle(img, kickPos, kickRadius, (0, 0, 255), -1)
 
     if hands:
         for hand in hands:
             lmList = hand["lmList"]
-            #p1 = (lmList[17][0], lmList[17][1])
-            #p2 = (lmList[5][0], lmList[5][1])
+
             pos = (lmList[8][0], lmList[8][1])
             dist = lmList[8][2]
             if dist > -60:
