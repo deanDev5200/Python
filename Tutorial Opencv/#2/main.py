@@ -11,4 +11,7 @@ cv2.imshow('gray', gray)
 
 cv2.imwrite('tes.jpg', gray)
 
+tes = cv2.imread('tes.jpg')
+cv2.imshow('tes.jpg', tes)
+
 cv2.waitKey(0)
