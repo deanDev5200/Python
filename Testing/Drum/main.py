@@ -9,16 +9,30 @@ snareSound = pygame.mixer.Sound('audio/wav/snare.wav')
 tom1Sound = pygame.mixer.Sound('audio/wav/tom1.wav')
 tom2Sound = pygame.mixer.Sound('audio/wav/tom2.wav')
 tom3Sound = pygame.mixer.Sound('audio/wav/tom3.wav')
+crashlSound = pygame.mixer.Sound('audio/wav/crashl.wav')
+crashrSound = pygame.mixer.Sound('audio/wav/crashr.wav')
+rideSound = pygame.mixer.Sound('audio/wav/ride.wav')
+kickSound = pygame.mixer.Sound('audio/wav/kick.wav')
 cap = cv2.VideoCapture(0)
 drumImg = cv2.imread('Images/drum/drum.png', -1)
-detector = HandDetector(staticMode=False, maxHands=2, modelComplexity=0, detectionCon=0.8, minTrackCon=0.4)
+detector = HandDetector(staticMode=False, maxHands=2, modelComplexity=1, detectionCon=0.7, minTrackCon=0.7)
 
 snareRadius = 90
 snarePos = (480, 497)
+
 tomRadius = 60
 tom1Pos = (348, 391)
 tom2Pos = (480, 318)
 tom3Pos = (612, 391)
+
+crashlRadius = 90
+crashlPos = (303, 219)
+ridePos = (743, 232)
+crashrRadius = 70
+crashrPos = (576, 209)
+kickRadius = 120
+kickPos = (684, 584)
+
 tapR = False
 tapL = False
 
@@ -45,7 +59,7 @@ while True:
     hands, img = detector.findHands(img, draw=True, flipType=False)
 
     img = overlayPNG(img, drumImg)
-    #img = cv2.circle(img, tom1Pos, tomRadius, (0, 0, 255), -1)
+    #img = cv2.circle(img, kickPos, kickRadius, (0, 0, 255), -1)
 
     if hands:
         for hand in hands:
@@ -62,9 +76,16 @@ while True:
             img = cv2.putText(img, str(dist), pos, cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 1)
 
             checkSnare = check(pos[0], pos[1], snarePos[0], snarePos[1], snareRadius)
+
             checkTom1 = check(pos[0], pos[1], tom1Pos[0], tom1Pos[1], tomRadius)
             checkTom2 = check(pos[0], pos[1], tom2Pos[0], tom2Pos[1], tomRadius)
             checkTom3 = check(pos[0], pos[1], tom3Pos[0], tom3Pos[1], tomRadius)
+            
+            checkCrashL = check(pos[0], pos[1], crashlPos[0], crashlPos[1], crashlRadius)
+            checkRide = check(pos[0], pos[1], ridePos[0], ridePos[1], crashlRadius)
+            checkCrashR = check(pos[0], pos[1], crashrPos[0], crashrPos[1], crashrRadius)
+            
+            checkKick = check(pos[0], pos[1], kickPos[0], kickPos[1], kickRadius)
 
             if hand["type"] == "Right":
                 if dist < -60 and not tapR:
@@ -77,6 +98,14 @@ while True:
                         tom2Sound.play()
                     elif checkTom3:
                         tom3Sound.play()
+                    elif checkCrashL:
+                        crashlSound.play()
+                    elif checkCrashR:
+                        crashrSound.play()
+                    elif checkRide:
+                        rideSound.play()
+                    elif checkKick:
+                        kickSound.play()
                     else:
                         tapR = False
                 elif dist > -55 and tapR:
@@ -92,6 +121,14 @@ while True:
                         tom2Sound.play()
                     elif checkTom3:
                         tom3Sound.play()
+                    elif checkCrashL:
+                        crashlSound.play()
+                    elif checkCrashR:
+                        crashrSound.play()
+                    elif checkRide:
+                        rideSound.play()
+                    elif checkKick:
+                        kickSound.play()
                     else:
                         tapL = False
                 elif dist > -55 and tapL:
