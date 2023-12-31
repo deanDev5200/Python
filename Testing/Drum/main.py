@@ -15,23 +15,23 @@ rideSound = pygame.mixer.Sound('audio/wav/ride.wav')
 kickSound = pygame.mixer.Sound('audio/wav/kick.wav')
 cap = cv2.VideoCapture(0)
 drumImg = cv2.imread('Images/drum/drum.png', -1)
-detector = HandDetector(staticMode=False, maxHands=2, modelComplexity=1, detectionCon=0.7, minTrackCon=0.7)
+detector = HandDetector(staticMode=False, maxHands=2, modelComplexity=1, detectionCon=0.5, minTrackCon=0.7)
 
-snareRadius = 90
-snarePos = (480, 497)
+snareRadius = 110
+snarePos = (430, 455)
 
-tomRadius = 60
-tom1Pos = (348, 391)
-tom2Pos = (480, 318)
-tom3Pos = (612, 391)
+tomRadius = 80
+tom1Pos = (273, 331)
+tom2Pos = (430, 244)
+tom3Pos = (585, 332)
 
-crashlRadius = 90
-crashlPos = (303, 219)
-ridePos = (743, 232)
-crashrRadius = 70
-crashrPos = (576, 209)
-kickRadius = 120
-kickPos = (684, 584)
+crashlRadius = 110
+crashlPos = (220, 130)
+ridePos = (738, 144)
+crashrRadius = 80
+crashrPos = (540, 115)
+kickRadius = 130
+kickPos = (670, 560)
 
 tapR = False
 tapL = False

@@ -267,7 +267,6 @@ def earthquake():
     return f"Gempa terkini terjadi tanggal {datt['date'][0]} pada {datt['date'][1][0:5].replace('.', ':')} Waktu Indonesia Barat. Dengan magnitudo {datt['magnitude']} skala richter. Di kedalaman {datt['depth']}. {datt['loc']}"
 
 def respond(voice_data:str):
-    print(voice_data)
     global start_time, bangun, temperature
     if bangun:
         if there_exists(['hai', 'hello', 'halo']) and not there_exists(['robot']):
@@ -336,8 +335,12 @@ def respond(voice_data:str):
             speak(time)
 
         elif there_exists(['tanggal berapa sekarang', 'katakan tanggal berapa sekarang', 'sekarang tanggal berapa']):
-            date = datetime.date.today().strftime("%d/%m/%Y")
-            speak(f'Sekarang {date}')
+            date = datetime.date.today()
+            datestr = date.strftime("%d/%m/%Y")
+            speak(f'Sekarang {datestr}')
+            if date.day == 31 and date.month == 12:
+                speak('oh ya aku ingin mengucapkan sesuatu')
+                speak(f'selamat tahun baru {date.year+1}! tahun baru berarti babak baru, mari kita sambut tahun baru {date.year+1} dengan penuh suka cita')
 
         elif there_exists(['ucapkan', 'kalau begitu ucapkan']):
             word = voice_data.split('ucapkan')[-1]
