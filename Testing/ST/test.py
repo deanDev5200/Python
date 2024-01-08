@@ -14,7 +14,7 @@ def print_result(result: GestureRecognizerResult, output_image: mp.Image, timest
 options = GestureRecognizerOptions(
     base_options=BaseOptions(model_asset_path=model_path, delegate=BaseOptions.Delegate.CPU),
     running_mode=VisionRunningMode.LIVE_STREAM,
-    result_callback=print_result)
+    result_callback=print_result)      
 print('a')
 
 while True:
