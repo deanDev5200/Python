@@ -22,7 +22,7 @@ print('a')
 
 while True:
     _, img = video.read()
-    view = img
+    #view = img
     try:
         with GestureRecognizer.create_from_options(options) as recognizer:
             mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
