@@ -30,8 +30,8 @@ def print_result(result: GestureRecognizerResult, output_image: mp.Image, timest
                     time.sleep(0.1)
                     keyboard.release("Ctrl+]")
                     scene = False
-            elif cat != 'kagebunshin' and jutsu:
-                print('d')
+                    
+                time.sleep(1)
                 jutsu = False
         except Exception as e:
             print(e)
