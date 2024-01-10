@@ -1,34 +1,60 @@
+import time
+import keyboard
+startTime = time.time()
+from mediapipe.tasks.python import BaseOptions
+from mediapipe.tasks.python.vision import GestureRecognizer, GestureRecognizerResult, GestureRecognizerOptions, RunningMode as VisionRunningMode
+import mediapipe as mp
 import cv2
-from cvzone.HandTrackingModule import HandDetector
-
-detector = HandDetector(maxHands=2, modelComplexity=1, minTrackCon=0.7, detectionCon=0.7)
+ 
+model_path = 'D:\Python\Testing\ST\gesture_recognizer.task'
 video = cv2.VideoCapture(0)
-rightMidMCP = (0, 0)
-rightIndPIP = (0, 0)
-leftMidMCP = (0, 0)
-leftIndPIP = (0, 0)
+_, view = video.read()
+jutsu = False
+scene = False
+
+def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
+    global view, jutsu, scene
+    if len(result.gestures) > 0:
+        try:
+            cat = result.gestures[0][0].category_name
+            if cat == 'kagebunshin' and not jutsu:
+                print('nice')
+                jutsu = True
+                if not scene:
+                    keyboard.press("Ctrl+Home")
+                    time.sleep(0.1)
+                    keyboard.release("Ctrl+Home")
+                    scene = True
+                else:
+                    keyboard.press("Ctrl+]")
+                    time.sleep(0.1)
+                    keyboard.release("Ctrl+]")
+                    scene = False
+            elif cat != 'kagebunshin' and jutsu:
+                print('d')
+                jutsu = False
+        except Exception as e:
+            print(e)
+
+    view = output_image.numpy_view()
+
+options = GestureRecognizerOptions(
+    base_options=BaseOptions(model_asset_path=model_path, delegate=BaseOptions.Delegate.CPU),
+    running_mode=VisionRunningMode.LIVE_STREAM,
+    result_callback=print_result)
 
 while True:
     _, img = video.read()
-    img = cv2.flip(img, 1)
-    hands, img = detector.findHands(img, True, False)
+    #view = img
+    try:
+        with GestureRecognizer.create_from_options(options) as recognizer:
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=img)
+            recognizer.recognize_async(mp_image, round(time.time()-startTime))
+    except Exception as e:
+        print(e)
 
-    if hands:
-        for hand in hands:
-            lmList = hand["lmList"]
-            if hand["type"] == "Right":
-                rightMidMCP = (lmList[10][0], lmList[10][1])
-                rightIndPIP = (lmList[6][0], lmList[6][1])
-                print(rightMidMCP)
-            else:
-                leftMidMCP = (lmList[10][0], lmList[10][1])
-                leftIndPIP = (lmList[6][0], lmList[6][1])
-                #print(leftMidMCP)
-
-    cv2.imshow("Video", img)
-
+    cv2.imshow("epep", view)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-          
+    
 video.release()
-cv2.destroyAllWindows()
