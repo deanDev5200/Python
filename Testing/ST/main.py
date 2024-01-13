@@ -4,7 +4,6 @@ startTime = time.time()
 from mediapipe.tasks.python import BaseOptions
 from mediapipe.tasks.python.vision import GestureRecognizer, GestureRecognizerResult, GestureRecognizerOptions, RunningMode as VisionRunningMode
 import mediapipe as mp
-import numpy
 import cv2
 
 model_path = 'D:\Python\Testing\ST\gesture_recognizer.task' 
